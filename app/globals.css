@@ -1,26 +1,414 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ============================================
+   STEP 1: RESET - Remove browser defaults
+   ============================================ */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* ============================================
+   STEP 2: BODY - Base font for entire app
+   ============================================ */
+body {
+  font-family: 'Segoe UI', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ============================================
+   STEP 3: BRAND STYLES - Logo + Name
+   ============================================ */
+.brand-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.brand-icon {
+  width: 40px;
+  height: 40px;
+  color: #1a2332;
+}
+
+.brand-name {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1a2332;
+  letter-spacing: -0.5px;
+}
+
+/* ============================================
+   STEP 4: LOGIN PAGE - Full screen centered
+   ============================================ */
+.login-background {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  width: 100%;
+  background-color: #f0f2f5;
+}
+
+.login-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+}
+
+.login-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.login-brand-icon {
+  width: 48px;
+  height: 48px;
+  color: #1a2332;
+}
+
+.login-brand-name {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1a2332;
+  letter-spacing: -0.5px;
+}
+
+/* ============================================
+   STEP 5: LOGIN CARD - White box with shadow
+   ============================================ */
+.login-card {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.06);
+  padding: 48px 44px;
+  width: 480px;
+  max-width: 90vw;
+}
+
+.login-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1a2332;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.login-subtitle {
+  font-size: 15px;
+  color: #6b7280;
+  text-align: center;
+  margin-bottom: 36px;
+}
+
+/* ============================================
+   STEP 6: REGISTER PAGE - Split screen layout
+   ============================================ */
+.register-container {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+}
+
+.register-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 60px 80px;
+  background: #ffffff;
+  overflow-y: auto;
+}
+
+.register-right {
+  flex: 1;
+  position: relative;
+  display: none;
+}
+
+.register-right img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.register-title {
+  font-size: 30px;
+  font-weight: 700;
+  color: #1a2332;
+  margin-bottom: 8px;
+  margin-top: 16px;
+}
+
+.register-subtitle {
+  font-size: 15px;
+  color: #6b7280;
+  margin-bottom: 32px;
+}
+
+/* ============================================
+   STEP 7: USER TYPE TOGGLE - Owner/Tenant
+   ============================================ */
+.user-type-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.user-type-toggle {
+  display: flex;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 28px;
+}
+
+.user-type-btn {
+  flex: 1;
+  padding: 12px 24px;
+  border: none;
+  background: #ffffff;
+  font-size: 15px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  text-align: center;
+}
+
+.user-type-btn:hover {
+  background: #f9fafb;
+}
+
+.user-type-btn.active {
+  background: #ffffff;
+  color: #1a56db;
+  font-weight: 600;
+  border-bottom: 2px solid #1a56db;
+}
+
+/* ============================================
+   STEP 8: FORM FIELDS - Input boxes
+   ============================================ */
+.form-group {
+  margin-bottom: 24px;
+}
+
+.form-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.form-input-wrapper {
+  display: flex;
+  align-items: center;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  padding: 0 16px;
+  height: 48px;
+  background: #ffffff;
+  transition: all 0.2s ease;
+}
+
+.form-input-wrapper:hover {
+  border-color: #9ca3af;
+}
+
+.form-input-wrapper:focus-within {
+  border-color: #1a56db;
+  box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.1);
+}
+
+.form-input-icon {
+  width: 20px;
+  height: 20px;
+  color: #9ca3af;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.form-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 15px;
+  color: #1f2937;
+  background: transparent;
+  height: 100%;
+}
+
+.form-input::placeholder {
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+.form-input-action {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9ca3af;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+}
+
+.form-input-action:hover {
+  color: #6b7280;
+}
+
+.form-helper-text {
+  font-size: 13px;
+  color: #9ca3af;
+  margin-top: 6px;
+}
+
+/* ============================================
+   STEP 9: DROPDOWN - Select box
+   ============================================ */
+.form-select-wrapper {
+  position: relative;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  height: 48px;
+  background: #ffffff;
+  transition: all 0.2s ease;
+}
+
+.form-select-wrapper:hover {
+  border-color: #9ca3af;
+}
+
+.form-select-wrapper:focus-within {
+  border-color: #1a56db;
+  box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.1);
+}
+
+.form-select {
+  width: 100%;
+  height: 100%;
+  padding: 0 40px 0 16px;
+  border: none;
+  outline: none;
+  font-size: 15px;
+  color: #1f2937;
+  background: transparent;
+  appearance: none;
+  cursor: pointer;
+}
+
+.form-select-arrow {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  color: #9ca3af;
+  pointer-events: none;
+}
+
+/* ============================================
+   STEP 10: BUTTON - Login/Register button
+   ============================================ */
+.btn-primary {
+  width: 100%;
+  padding: 14px 24px;
+  background: #1a2332;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.25s ease;
+  margin-top: 8px;
+}
+
+.btn-primary:hover {
+  background: #2a3a4e;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(26, 35, 50, 0.3);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-arrow {
+  width: 20px;
+  height: 20px;
+}
+
+/* ============================================
+   STEP 11: FOOTER LINKS - "Already have account?"
+   ============================================ */
+.auth-footer {
+  text-align: center;
+  margin-top: 28px;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.auth-footer a {
+  color: #1a56db;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.auth-footer a:hover {
+  color: #1e40af;
+  text-decoration: underline;
+}
+
+/* ============================================
+   STEP 12: RESPONSIVE - Mobile friendly
+   ============================================ */
+@media (min-width: 768px) {
+  .register-right {
+    display: block;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@media (max-width: 768px) {
+  .register-left {
+    padding: 40px 24px;
+  }
+
+  .login-card {
+    padding: 36px 24px;
+    width: 100%;
+    max-width: 420px;
+  }
+}
+
+@media (max-width: 480px) {
+  .register-left {
+    padding: 32px 20px;
+  }
+
+  .login-card {
+    padding: 28px 20px;
+  }
+
+  .register-title,
+  .login-title {
+    font-size: 24px;
+  }
 }
