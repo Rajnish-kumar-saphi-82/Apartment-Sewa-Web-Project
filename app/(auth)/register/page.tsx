@@ -14,21 +14,22 @@ import { useState } from "react";
 import Link from "next/link";
 
 export default function RegisterPage() {
+
   const [userType, setUserType] = useState("Owner");
 
   return (
     <div className="register-container">
 
-      {/* LEFT SIDE */}
       <div className="register-left">
 
-        {/* BRAND */}
         <div className="brand-container">
           <Building className="brand-icon" />
-          <h1 className="brand-name">Apartment Sewa</h1>
+
+          <h1 className="brand-name">
+            Apartment Sewa
+          </h1>
         </div>
 
-        {/* TITLE */}
         <h2 className="register-title">
           Create Admin Account
         </h2>
@@ -37,7 +38,6 @@ export default function RegisterPage() {
           Set up your property management profile.
         </p>
 
-        {/* USER TYPE */}
         <label className="user-type-label">
           Select User Type
         </label>
@@ -63,12 +63,11 @@ export default function RegisterPage() {
           >
             Tenant
           </button>
+
         </div>
 
-        {/* FORM */}
         <form>
 
-          {/* FULL NAME */}
           <div className="form-group">
             <label className="form-label">
               Full Name
@@ -85,7 +84,6 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          {/* EMAIL */}
           <div className="form-group">
             <label className="form-label">
               Email Address
@@ -102,7 +100,6 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          {/* PASSWORD */}
           <div className="form-group">
             <label className="form-label">
               Password
@@ -126,7 +123,6 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          {/* HOUSE LINK CODE */}
           <div className="form-group">
             <label className="form-label">
               House Link Code
@@ -147,7 +143,6 @@ export default function RegisterPage() {
             </p>
           </div>
 
-          {/* BUTTON */}
           <button
             type="submit"
             className="btn-primary"
@@ -156,9 +151,9 @@ export default function RegisterPage() {
 
             <ArrowRight className="btn-arrow" />
           </button>
+
         </form>
 
-        {/* FOOTER */}
         <div className="auth-footer">
           Already have an account?{" "}
 
@@ -166,9 +161,9 @@ export default function RegisterPage() {
             Log in
           </Link>
         </div>
+
       </div>
 
-      {/* RIGHT SIDE */}
       <div className="register-right">
         <img
           src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=2000&auto=format&fit=crop"

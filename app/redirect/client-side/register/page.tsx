@@ -1,0 +1,15 @@
+"use client";
+
+import { useRouter } from "next/router";
+
+export default function Page() {
+
+    const router = useRouter();
+
+    const handleRedirect = () => {
+        router.push("/register");
+    }
+    return (
+        <div></div>
+    );
+}
