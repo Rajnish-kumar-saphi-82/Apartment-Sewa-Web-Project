@@ -24,6 +24,7 @@ body {
 .brand-container {
   display: flex;
   align-items: center;
+  justify-content: center;  
   gap: 10px;
   margin-bottom: 8px;
 }
@@ -31,13 +32,13 @@ body {
 .brand-icon {
   width: 40px;
   height: 40px;
-  color: #1a2332;
+  color: #1a56db;
 }
 
 .brand-name {
   font-size: 22px;
   font-weight: 700;
-  color: #1a2332;
+  color: #1a56db;
   letter-spacing: -0.5px;
 }
 
@@ -90,6 +91,7 @@ body {
   padding: 48px 44px;
   width: 480px;
   max-width: 90vw;
+  
 }
 
 .login-title {
@@ -124,6 +126,7 @@ body {
   padding: 60px 80px;
   background: #ffffff;
   overflow-y: auto;
+  
 }
 
 .register-right {
@@ -141,15 +144,17 @@ body {
 .register-title {
   font-size: 30px;
   font-weight: 700;
-  color: #1a2332;
+  color: #1a56db;
   margin-bottom: 8px;
   margin-top: 16px;
+  text-align: center;
 }
 
 .register-subtitle {
   font-size: 15px;
   color: #6b7280;
   margin-bottom: 32px;
+  text-align: center;   
 }
 
 /* ============================================
