@@ -64,6 +64,7 @@ export default function RegisterPage() {
             Tenant
           </button>
 
+
         </div>
 
         <form>

@@ -10,6 +10,10 @@ export default function Page() {
         router.push("/register");
     }
     return (
-        <div></div>
+        <div>
+            <button onClick={handleRedirect}>
+                Go To Register
+            </button>
+        </div>
     );
 }

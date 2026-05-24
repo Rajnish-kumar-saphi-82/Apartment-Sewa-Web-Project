@@ -10,6 +10,11 @@ export default function Page() {
         router.push("/login");
     }
     return (
-        <div></div>
+        <div>
+
+            <button onClick={handleRedirect}>
+                Go To Login
+            </button>
+        </div>
     );
 }
