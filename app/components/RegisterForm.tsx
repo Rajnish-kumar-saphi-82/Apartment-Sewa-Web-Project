@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import { useState } from "react";
+
 import Link from "next/link";
 
 export default function RegisterPage() {
@@ -18,17 +19,23 @@ export default function RegisterPage() {
   const [userType, setUserType] = useState("Owner");
 
   return (
+
     <div className="register-container">
 
+      
       <div className="register-left">
 
+        
         <div className="brand-container">
+
           <Building className="brand-icon" />
 
           <h1 className="brand-name">
             Apartment Sewa
           </h1>
+
         </div>
+
 
         <h2 className="register-title">
           Create Admin Account
@@ -38,6 +45,7 @@ export default function RegisterPage() {
           Set up your property management profile.
         </p>
 
+        
         <label className="user-type-label">
           Select User Type
         </label>
@@ -64,17 +72,20 @@ export default function RegisterPage() {
             Tenant
           </button>
 
-
         </div>
 
+        
         <form>
 
+          
           <div className="form-group">
+
             <label className="form-label">
               Full Name
             </label>
 
             <div className="form-input-wrapper">
+
               <User className="form-input-icon" />
 
               <input
@@ -82,15 +93,20 @@ export default function RegisterPage() {
                 placeholder="Rajnish Kumar Saphi"
                 className="form-input"
               />
+
             </div>
+
           </div>
 
+        
           <div className="form-group">
+
             <label className="form-label">
               Email Address
             </label>
 
             <div className="form-input-wrapper">
+
               <Mail className="form-input-icon" />
 
               <input
@@ -98,15 +114,20 @@ export default function RegisterPage() {
                 placeholder="rajnish@example.com"
                 className="form-input"
               />
+
             </div>
+
           </div>
 
+          
           <div className="form-group">
+
             <label className="form-label">
               Password
             </label>
 
             <div className="form-input-wrapper">
+
               <Lock className="form-input-icon" />
 
               <input
@@ -121,15 +142,41 @@ export default function RegisterPage() {
               >
                 <Eye size={20} />
               </button>
+
             </div>
+
           </div>
 
+          
           <div className="form-group">
+
+            <label className="form-label">
+              Confirm Password
+            </label>
+
+            <div className="form-input-wrapper">
+
+              <Lock className="form-input-icon" />
+
+              <input
+                type="password"
+                placeholder="********"
+                className="form-input"
+              />
+
+            </div>
+
+          </div>
+
+          
+          <div className="form-group">
+
             <label className="form-label">
               House Link Code
             </label>
 
             <div className="form-input-wrapper">
+
               <LinkIcon className="form-input-icon" />
 
               <input
@@ -137,40 +184,52 @@ export default function RegisterPage() {
                 placeholder="HSE-XXXX-XXXX"
                 className="form-input"
               />
+
             </div>
 
             <p className="form-helper-text">
               Contact your property owner for your unique link code.
             </p>
+
           </div>
 
+          
           <button
             type="submit"
             className="btn-primary"
           >
+
             Create Account
 
             <ArrowRight className="btn-arrow" />
+
           </button>
 
         </form>
 
+        
         <div className="auth-footer">
+
           Already have an account?{" "}
 
           <Link href="/login">
             Log in
           </Link>
+
         </div>
 
       </div>
 
+      
       <div className="register-right">
+
         <img
           src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=2000&auto=format&fit=crop"
           alt="Apartment"
         />
+
       </div>
+
     </div>
   );
 }
