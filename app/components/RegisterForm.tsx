@@ -7,6 +7,7 @@ import {
   Building,
   Link as LinkIcon,
   Eye,
+  EyeOff,
   ArrowRight,
 } from "lucide-react";
 
@@ -15,49 +16,34 @@ import { useState } from "react";
 import Link from "next/link";
 
 export default function RegisterPage() {
-
   const [userType, setUserType] = useState("Owner");
 
+  const [showPassword, setShowPassword] = useState(false);
+
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   return (
-
     <div className="register-container">
-
-      
       <div className="register-left">
-
-        
         <div className="brand-container">
-
           <Building className="brand-icon" />
 
-          <h1 className="brand-name">
-            Apartment Sewa
-          </h1>
-
+          <h1 className="brand-name">Apartment Sewa</h1>
         </div>
 
-
-        <h2 className="register-title">
-          Create Admin Account
-        </h2>
+        <h2 className="register-title">Create Admin Account</h2>
 
         <p className="register-subtitle">
           Set up your property management profile.
         </p>
 
-        
-        <label className="user-type-label">
-          Select User Type
-        </label>
+        <label className="user-type-label">Select User Type</label>
 
         <div className="user-type-toggle">
-
           <button
             type="button"
             onClick={() => setUserType("Owner")}
-            className={`user-type-btn ${
-              userType === "Owner" ? "active" : ""
-            }`}
+            className={`user-type-btn ${userType === "Owner" ? "active" : ""}`}
           >
             Owner
           </button>
@@ -65,27 +51,17 @@ export default function RegisterPage() {
           <button
             type="button"
             onClick={() => setUserType("Tenant")}
-            className={`user-type-btn ${
-              userType === "Tenant" ? "active" : ""
-            }`}
+            className={`user-type-btn ${userType === "Tenant" ? "active" : ""}`}
           >
             Tenant
           </button>
-
         </div>
 
-        
         <form>
-
-          
           <div className="form-group">
-
-            <label className="form-label">
-              Full Name
-            </label>
+            <label className="form-label">Full Name</label>
 
             <div className="form-input-wrapper">
-
               <User className="form-input-icon" />
 
               <input
@@ -93,20 +69,13 @@ export default function RegisterPage() {
                 placeholder="Rajnish Kumar Saphi"
                 className="form-input"
               />
-
             </div>
-
           </div>
 
-        
           <div className="form-group">
-
-            <label className="form-label">
-              Email Address
-            </label>
+            <label className="form-label">Email Address</label>
 
             <div className="form-input-wrapper">
-
               <Mail className="form-input-icon" />
 
               <input
@@ -114,24 +83,17 @@ export default function RegisterPage() {
                 placeholder="rajnish@example.com"
                 className="form-input"
               />
-
             </div>
-
           </div>
 
-          
           <div className="form-group">
-
-            <label className="form-label">
-              Password
-            </label>
+            <label className="form-label">Password</label>
 
             <div className="form-input-wrapper">
-
               <Lock className="form-input-icon" />
 
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="********"
                 className="form-input"
               />
@@ -139,37 +101,36 @@ export default function RegisterPage() {
               <button
                 type="button"
                 className="form-input-action"
+                onClick={() => setShowPassword(!showPassword)}
               >
-                <Eye size={20} />
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
-
             </div>
-
           </div>
 
-          
           <div className="form-group">
-
-            <label className="form-label">
-              Confirm Password
-            </label>
+            <label className="form-label">Confirm Password</label>
 
             <div className="form-input-wrapper">
-
               <Lock className="form-input-icon" />
 
               <input
-                type="password"
+                type={showConfirmPassword ? "text" : "password"}
                 placeholder="********"
                 className="form-input"
               />
 
+              <button
+                type="button"
+                className="form-input-action"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
             </div>
-
           </div>
 
-          
-          <div className="form-group">
+          {/* <div className="form-group">
 
             <label className="form-label">
               House Link Code
@@ -191,45 +152,22 @@ export default function RegisterPage() {
               Contact your property owner for your unique link code.
             </p>
 
-          </div>
+          </div> */}
 
-          
-          <button
-            type="submit"
-            className="btn-primary"
-          >
-
+          <button type="submit" className="btn-primary">
             Create Account
-
             <ArrowRight className="btn-arrow" />
-
           </button>
-
         </form>
 
-        
         <div className="auth-footer">
-
-          Already have an account?{" "}
-
-          <Link href="/login">
-            Log in
-          </Link>
-
+          Already have an account? <Link href="/login">Log in</Link>
         </div>
-
       </div>
 
-      
       <div className="register-right">
-
-        <img
-          src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=2000&auto=format&fit=crop"
-          alt="Apartment"
-        />
-
+        <img src="/assets/images/login-bg.png" alt="Apartment" />
       </div>
-
     </div>
   );
 }

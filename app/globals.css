@@ -13,7 +13,12 @@
    STEP 2: BODY - Base font for entire app
    ============================================ */
 body {
-  font-family: 'Segoe UI', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family:
+    "Segoe UI",
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -24,7 +29,7 @@ body {
 .brand-container {
   display: flex;
   align-items: center;
-  justify-content: center;  
+  justify-content: center;
   gap: 10px;
   margin-bottom: 8px;
 }
@@ -46,20 +51,40 @@ body {
    STEP 4: LOGIN PAGE - Full screen centered
    ============================================ */
 .login-background {
+  min-height: 100vh;
+  width: 100%;
+
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
-  width: 100%;
-  background-color: #f0f2f5;
+
+  padding: 20px;
+
+  background-image:
+    linear-gradient(
+      rgba(0, 0, 0, 0.45),
+      rgba(0, 0, 0, 0.45)
+    ),
+    url("/assets/images/login-bg.png");
+
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  overflow: hidden;
 }
 
 .login-wrapper {
+  width: 100%;
+  max-width: 450px;
+
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 30px;
+
+  gap: 20px;
 }
+
 
 .login-brand {
   display: flex;
@@ -72,6 +97,7 @@ body {
   width: 48px;
   height: 48px;
   color: #1a56db;
+ 
 }
 
 .login-brand-name {
@@ -79,19 +105,20 @@ body {
   font-weight: 700;
   color: #1a56db;
   letter-spacing: -0.5px;
+  /* background-color: white; */
 }
 
 /* ============================================
    STEP 5: LOGIN CARD - White box with shadow
    ============================================ */
 .login-card {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.92);
   border-radius: 16px;
   box-shadow: 0 2px 20px rgba(0, 0, 0, 0.06);
   padding: 48px 44px;
   width: 480px;
   max-width: 90vw;
-  
+  backdrop-filter: blur(8px);
 }
 
 .login-title {
@@ -116,6 +143,7 @@ body {
   display: flex;
   min-height: 100vh;
   width: 100%;
+  overflow: hidden;
 }
 
 .register-left {
@@ -125,10 +153,23 @@ body {
   justify-content: center;
   padding: 60px 80px;
   background: #ffffff;
-  overflow-y: auto;
-  
+  /* overflow-y: auto; */
+  overflow: hidden;
 }
+.register-form-card {
+  width: 100%;
+  max-width: 520px;
 
+  background: rgba(255, 255, 255, 0.96);
+
+  padding: 40px;
+
+  border-radius: 20px;
+
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+
+  backdrop-filter: blur(8px);
+}
 .register-right {
   flex: 1;
   position: relative;
@@ -154,7 +195,7 @@ body {
   font-size: 15px;
   color: #6b7280;
   margin-bottom: 32px;
-  text-align: center;   
+  text-align: center;
 }
 
 /* ============================================
