@@ -18,7 +18,7 @@ declare global {
 export const authMiddleware = (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const authHeader = req.headers.authorization;
@@ -27,14 +27,11 @@ export const authMiddleware = (
     req.user = payload;
     next();
   } catch (exception: unknown) {
-    const errorMessage = exception instanceof Error ? exception.message : "Authentication failed";
+    const errorMessage =
+      exception instanceof Error ? exception.message : "Authentication failed";
     const errorStatus = (exception as any)?.status || 401;
-    
-    return ApiResponseHelper.error(
-      res,
-      errorMessage,
-      errorStatus
-    );
+
+    return ApiResponseHelper.error(res, errorMessage, errorStatus);
   }
 };
 
@@ -51,14 +48,15 @@ export const roleMiddleware = (...allowedRoles: UserRole[]) => {
         return ApiResponseHelper.error(
           res,
           "Forbidden: Insufficient permissions",
-          403
+          403,
         );
       }
 
       next();
     } catch (exception: unknown) {
-      const errorMessage = exception instanceof Error ? exception.message : "Authorization failed";
-      
+      const errorMessage =
+        exception instanceof Error ? exception.message : "Authorization failed";
+
       return ApiResponseHelper.error(res, errorMessage, 500);
     }
   };
