@@ -1,8 +1,5 @@
 import z, { email } from "zod";
 
-
-
-
 export const registerSchema = z
   .object({
     userType: z.enum(["Owner", "Tenant"], {
@@ -45,7 +42,6 @@ export const COUNTRY_CODES = [
   { code: "+44", short: "UK" },
   { code: "+86", short: "CN" },
 ] as const;
-
 
 // export const loginSchema = z.object({
 // email:z.email(),
