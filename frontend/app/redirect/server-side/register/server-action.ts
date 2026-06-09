@@ -1,9 +1,7 @@
-"use server"
-
+"use server";
 
 import { redirect } from "next/navigation";
 
 export default async function RegisterServerAction() {
-
   redirect("/register");
 }
