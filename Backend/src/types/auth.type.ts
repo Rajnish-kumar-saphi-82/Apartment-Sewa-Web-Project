@@ -14,6 +14,21 @@ export const COUNTRY_CODES = [
   { code: "+86", short: "CN" },
 ] as const;
 
+// export const userSchema = z.object({
+//   id: z.string().optional(),
+//   full_name: z.string().min(3, "Full name must be at least 3 characters"),
+//   email: z.string().email("Please enter a valid email address"),
+//   password: z.string().min(6, "Password must be at least 6 characters"),
+//   role: z.nativeEnum(UserRole),
+//   country_code: z.enum(["+977", "+91", "+1", "+44", "+86"]),
+//   phone: z
+//     .string()
+//     .regex(/^\d{6,15}$/, "Phone number must contain 6–15 digits"),
+//   is_verified: z.boolean().default(false),
+//   created_at: z.date().optional(),
+//   updated_at: z.date().optional(),
+// });
+
 export const userSchema = z.object({
   id: z.string().optional(),
   full_name: z.string().min(3, "Full name must be at least 3 characters"),
@@ -24,6 +39,7 @@ export const userSchema = z.object({
   phone: z
     .string()
     .regex(/^\d{6,15}$/, "Phone number must contain 6–15 digits"),
+  profile_image: z.string().nullable().optional(),     // ← NEW
   is_verified: z.boolean().default(false),
   created_at: z.date().optional(),
   updated_at: z.date().optional(),

@@ -1,5 +1,5 @@
 import { UserRepository } from "../repositories/auth.repository.js";
-import type { RegisterDTO, LoginDTO } from "../dtos/auth.dto.js";
+import type { RegisterDTO, LoginDTO, ChangePasswordDTO } from "../dtos/auth.dto.js";
 import { HttpException } from "../exceptions/http-exception.js";
 import { PasswordUtil } from "../utils/hash.util.js";
 import { JWTUtil } from "../utils/jwt.util.js";
@@ -30,6 +30,7 @@ export class AuthService {
       phone: data.phone,
       is_verified: false,
     };
+    
 
     const created = await this.userRepo.create(newUser);
 
@@ -87,5 +88,67 @@ export class AuthService {
     const { password, ...userWithoutPassword } = userObject;
 
     return userWithoutPassword;
+  }
+  /////
+
+  async updateProfile(
+  userId: string,
+  data: Partial<{ fullName: string; email: string; phone: string }>,
+  profileImagePath?: string,
+): Promise<UserWithoutPassword> {
+  const existingUser = await this.userRepo.findById(userId);
+
+  if (!existingUser) {
+    throw new HttpException(404, "User not found");
+  }
+
+  // prevent taking over someone else's email
+  if (data.email && data.email !== existingUser.email) {
+    const emailTaken = await this.userRepo.findByEmail(data.email);
+    if (emailTaken) {
+      throw new HttpException(400, "Email already in use");
+    }
+  }
+
+  const updatePayload: Record<string, unknown> = {};
+  if (data.fullName) updatePayload.full_name = data.fullName;
+  if (data.email) updatePayload.email = data.email;
+  if (data.phone) updatePayload.phone = data.phone;
+  if (profileImagePath) updatePayload.profile_image = profileImagePath;
+
+  const updated = await this.userRepo.updateById(userId, updatePayload);
+
+  if (!updated) {
+    throw new HttpException(404, "User not found");
+  }
+
+  const userObject = updated.toObject();
+  const { password, ...userWithoutPassword } = userObject;
+
+  return userWithoutPassword;
+}
+
+  async changePassword(
+    userId: string,
+    data: ChangePasswordDTO,
+  ): Promise<void> {
+    const user = await this.userRepo.findById(userId);
+
+    if (!user) {
+      throw new HttpException(404, "User not found");
+    }
+
+    const isCurrentValid = await PasswordUtil.compare(
+      data.currentPassword,
+      user.password,
+    );
+
+    if (!isCurrentValid) {
+      throw new HttpException(400, "Current password is incorrect");
+    }
+
+    const hashedNew = await PasswordUtil.hash(data.newPassword);
+
+    await this.userRepo.updateById(userId, { password: hashedNew } as any);
   }
 }

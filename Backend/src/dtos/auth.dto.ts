@@ -46,3 +46,39 @@ export const LoginDTO = z.object({
 });
 
 export type LoginDTO = z.infer<typeof LoginDTO>;
+
+export const UpdateProfileDTO = z.object({
+  fullName: z
+    .string()
+    .min(3, "Full name must be at least 3 characters")
+    .optional(),
+  email: z
+    .string()
+    .email("Please enter a valid email address")
+    .optional(),
+  phone: z
+    .string()
+    .regex(/^\d{6,15}$/, "Phone number must contain 6–15 digits")
+    .optional(),
+});
+
+export type UpdateProfileDTO = z.infer<typeof UpdateProfileDTO>;
+
+
+export const ChangePasswordDTO = z.object({
+  currentPassword: z
+    .string()
+    .min(1, "Current password is required"),
+  newPassword: z
+    .string()
+    .min(1, "New password is required")
+    .min(6, "New password must be at least 6 characters"),
+  confirmNewPassword: z
+    .string()
+    .min(1, "Please confirm your new password"),
+}).refine((data) => data.newPassword === data.confirmNewPassword, {
+  message: "Passwords do not match",
+  path: ["confirmNewPassword"],
+});
+
+export type ChangePasswordDTO = z.infer<typeof ChangePasswordDTO>;
