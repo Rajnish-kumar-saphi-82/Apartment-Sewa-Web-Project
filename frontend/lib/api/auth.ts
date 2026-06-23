@@ -1,4 +1,3 @@
-// lib/api/api/auth.ts
 import axiosInstance from "./axios-instance";
 import { API } from "./endpoints";
 
@@ -17,5 +16,13 @@ export const login = async (data: any) => {
     return response.data;
   } catch (error: Error | any) {
     throw new Error(error?.response?.data?.message || "LOGIN failed");
+  }
+};
+export const updatePassword = async (data: any) => {
+  try {
+    const response = await axiosInstance.put(API.AUTH.UPDATE_PASSWORD, data);
+    return response.data;
+  } catch (error: Error | any) {
+    throw new Error(error?.response?.data?.message || "Update password failed");
   }
 };
