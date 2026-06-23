@@ -18,7 +18,6 @@ export class JWTUtil {
     }
   }
 
-
   static extractToken(authHeader?: string): string {
     if (!authHeader) {
       throw new HttpException(401, "No authorization header provided");
@@ -28,6 +27,6 @@ export class JWTUtil {
       throw new HttpException(401, "Invalid authorization header format");
     }
 
-    return authHeader.substring(7); // Remove "Bearer " prefix
+    return authHeader.substring(7); 
   }
 }

@@ -8,6 +8,7 @@ export interface IUser extends Document {
   role: UserRole;
   country_code: string;
   phone: string;
+  profile_image: string | null;
   is_verified: boolean;
   created_at: Date;
 }
@@ -24,6 +25,7 @@ const UserSchema = new Schema<IUser>(
     },
     country_code: { type: String, required: true },
     phone: { type: String, required: true },
+    profile_image: { type: String, default: null },
     is_verified: { type: Boolean, default: false },
   },
   {
