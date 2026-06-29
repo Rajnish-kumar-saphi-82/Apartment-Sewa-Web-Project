@@ -74,3 +74,37 @@ export const ChangePasswordDTO = z
   });
 
 export type LoginDTO = z.infer<typeof LoginDTO>;
+
+export const AdminCreateUserDTO = z.object({
+  full_name: z
+    .string()
+    .min(1, "Full name is required")
+    .min(3, "Full name must be at least 3 characters"),
+  email: z
+    .string()
+    .min(1, "Email is required")
+    .email("Please enter a valid email address"),
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .min(6, "Password must be at least 6 characters"),
+  role: z.nativeEnum(UserRole, {
+    message: "Please select a valid role",
+  }),
+  country_code: z.enum(["+977", "+91", "+1", "+44", "+86"], {
+    message: "Please select a country code",
+  }),
+  phone: z
+    .string()
+    .min(1, "Phone number is required")
+    .regex(/^\d{6,15}$/, "Phone number must contain 6–15 digits"),
+  is_verified: z.boolean().optional(),
+});
+
+export type AdminCreateUserDTO = z.infer<typeof AdminCreateUserDTO>;
+
+export const AdminUpdateUserDTO = AdminCreateUserDTO.omit({
+  password: true,
+}).partial();
+
+export type AdminUpdateUserDTO = z.infer<typeof AdminUpdateUserDTO>;
