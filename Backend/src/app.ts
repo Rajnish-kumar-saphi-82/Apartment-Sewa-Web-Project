@@ -4,6 +4,7 @@ import cors from "cors";
 import path from "path";
 import { PORT } from "./configs/constant.js";
 import authRoutes from "./routes/auth.route.js";
+import adminUserRoutes from "./routes/admin-user.route.js";
 import { connectToMongoDB } from "./database/mongodb.js";
 import { ApiResponseHelper } from "./utils/apihelper.util.js";
 
@@ -31,6 +32,7 @@ app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/v1/admin/users", adminUserRoutes);
 
 app.get("/", (req: Request, res: Response) => {
   return res.json({
@@ -39,6 +41,7 @@ app.get("/", (req: Request, res: Response) => {
     status: "healthy",
     endpoints: {
       auth: "/api/v1/auth",
+      adminUsers: "/api/v1/admin/users",
     },
   });
 });

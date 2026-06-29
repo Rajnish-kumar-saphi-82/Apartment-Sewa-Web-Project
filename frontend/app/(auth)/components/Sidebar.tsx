@@ -16,13 +16,14 @@ import {
   Building2,
   Plus,
   UserCircle,
+  ShieldCheck,
 } from "lucide-react";
 import { useAuth } from "@/lib/context/AuthContext";
 
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
 
   const handleLogout = () => {
     logout();
@@ -31,6 +32,9 @@ export default function Sidebar() {
 
   const navItems = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    ...(user?.role === "Admin"
+      ? [{ name: "Admin Users", href: "/admin/users", icon: ShieldCheck }]
+      : []),
     { name: "Properties", href: "/dashboard/properties", icon: Building },
     { name: "Tenants", href: "/dashboard/tenants", icon: Users },
     { name: "Billing", href: "/dashboard/billing", icon: CreditCard },

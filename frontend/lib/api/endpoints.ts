@@ -7,4 +7,7 @@ export const API = {
     UPDATE_PASSWORD: "/api/v1/auth/change-password",
     CHANGE_PASSWORD: "/api/v1/auth/change-password",
   },
+  ADMIN: {
+    USERS: "/api/v1/admin/users",
+  },
 };
