@@ -1,77 +1,137 @@
 "use client";
 
-
 import { useEffect, useState } from "react";
 import { Search, Wrench, Plus, Upload, Check, AlertCircle, Clock, Trash2, X } from "lucide-react";
-import { getTickets, addTicket, updateTicketStatus, MaintenanceTicket, STORAGE_KEYS, getUnits, Unit } from "@/lib/mockData";
+import { getTickets as fetchTicketsApi, createTicket as addTicketApi, updateTicketStatus as updateTicketStatusApi, deleteTicket as deleteTicketApi, getUnits as fetchUnitsApi } from "@/lib/api/dashboard";
 import { useAuth } from "@/lib/context/AuthContext";
+import { handleAnalyzeImage } from "@/lib/actions/ai/gemini-action";
+import { useAlert } from "@/lib/context/AlertContext";
 
 export default function MaintenancePage() {
   const { user } = useAuth();
+  const { showAlert, showConfirm } = useAlert();
   
   // States
-  const [tickets, setTickets] = useState<MaintenanceTicket[]>([]);
-  const [units, setUnits] = useState<Unit[]>([]);
+  const [tickets, setTickets] = useState<any[]>([]);
+  const [units, setUnits] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<"Active" | "History">("Active");
   
   // Tenant states
   const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("Plumbing");
+  const [urgency, setUrgency] = useState("Medium");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState("");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  const loadData = async () => {
+    try {
+      const [ticketsRes, unitsRes] = await Promise.all([
+        fetchTicketsApi(),
+        fetchUnitsApi()
+      ]);
+      setTickets(ticketsRes.data.data || []);
+      setUnits(unitsRes.data.data || []);
+    } catch (error) {
+      console.error("Failed to load data", error);
+    }
+  };
 
   useEffect(() => {
-    setTickets(getTickets());
-    setUnits(getUnits());
+    loadData();
   }, []);
 
   // Tenant submits repair request
-  const handleTenantRequestSubmit = (e: React.FormEvent) => {
+  const handleTenantRequestSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!description) {
-      alert("Please provide a description of the issue.");
+      showAlert("Please provide a description of the issue.", "Required");
       return;
     }
 
     const assignedUnit = units.find(u => u.tenantPhone === user?.phone || u.tenantName === user?.full_name);
-    const imgUrl = imagePreview || "";
-    addTicket(assignedUnit?.flatNo || "Unassigned", description, imgUrl);
     
-    // Refresh tickets
-    setTickets(getTickets());
-    
-    // Reset
-    setDescription("");
-    setImageFile(null);
-    setImagePreview("");
-    alert("Maintenance ticket successfully submitted and sent to the landlord!");
+    try {
+      const formData = new FormData();
+      formData.append("flatNo", assignedUnit?.flatNo || "Unassigned");
+      formData.append("description", description);
+      formData.append("category", category);
+      formData.append("urgency", urgency);
+      if (imageFile) {
+        formData.append("image", imageFile);
+      }
+      
+      await addTicketApi(formData);
+      
+      // Refresh tickets
+      await loadData();
+      
+      // Reset
+      setDescription("");
+      setImageFile(null);
+      setImagePreview("");
+      showAlert("Maintenance ticket successfully submitted and sent to the landlord!", "Success");
+    } catch (error) {
+      console.error("Failed to submit ticket", error);
+      showAlert("Failed to submit maintenance ticket.", "Error");
+    }
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setImageFile(file);
       setImagePreview(URL.createObjectURL(file));
+
+      // Auto-analyze image for description
+      setIsAnalyzing(true);
+      try {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = async () => {
+          const base64Data = reader.result?.toString().split(',')[1];
+          if (base64Data) {
+            const res = await handleAnalyzeImage(base64Data, file.type);
+            if (res.success && res.data) {
+              setDescription(res.data);
+            } else {
+              console.warn("Failed to analyze image description.");
+            }
+          }
+          setIsAnalyzing(false);
+        };
+      } catch (err) {
+        console.error("Error analyzing image:", err);
+        setIsAnalyzing(false);
+      }
     }
   };
 
   // Owner status actions
-  const handleUpdateStatus = (ticketId: string, status: "Pending" | "In Progress" | "Fixed") => {
-    updateTicketStatus(ticketId, status);
-    setTickets(getTickets());
+  const handleUpdateStatus = async (ticketId: string, status: "Pending" | "In Progress" | "Fixed") => {
+    try {
+      await updateTicketStatusApi(ticketId, status);
+      await loadData();
+    } catch (error) {
+      console.error("Failed to update status", error);
+    }
   };
 
-  const handleDeleteTicket = (ticketId: string) => {
-    if (confirm("Are you sure you want to delete this maintenance ticket record?")) {
-      const stored = getTickets();
-      const filtered = stored.filter(t => t.id !== ticketId);
-      if (typeof window !== "undefined") {
-        localStorage.setItem(STORAGE_KEYS.tickets, JSON.stringify(filtered));
+  const handleDeleteTicket = async (ticketId: string) => {
+    if (await showConfirm("Are you sure you want to delete this maintenance ticket record?")) {
+      try {
+        await deleteTicketApi(ticketId);
+        await loadData();
+      } catch (error) {
+        console.error("Failed to delete ticket", error);
       }
-      setTickets(filtered);
     }
   };
 
   //  OWNER VIEW: MAINTENANCE CONTROL (Page 11)
   const renderOwnerMaintenance = () => {
+    const displayedTickets = tickets.filter(t => activeTab === "Active" ? t.status !== "Fixed" : t.status === "Fixed");
+
     return (
       <div>
         <div className="page-header">
@@ -83,19 +143,29 @@ export default function MaintenancePage() {
 
         {/* Tab filters (Active / History) */}
         <div className="tabs-header">
-          <button className="tab-btn active">Active Requests ({tickets.filter(t => t.status !== "Fixed").length})</button>
-          <button className="tab-btn">Archived History ({tickets.filter(t => t.status === "Fixed").length})</button>
+          <button 
+            className={`tab-btn ${activeTab === "Active" ? "active" : ""}`}
+            onClick={() => setActiveTab("Active")}
+          >
+            Active Requests ({tickets.filter(t => t.status !== "Fixed").length})
+          </button>
+          <button 
+            className={`tab-btn ${activeTab === "History" ? "active" : ""}`}
+            onClick={() => setActiveTab("History")}
+          >
+            Archived History ({tickets.filter(t => t.status === "Fixed").length})
+          </button>
         </div>
 
         {/* Tickets Grid */}
         <div className="maintenance-grid">
-          {tickets.length === 0 ? (
+          {displayedTickets.length === 0 ? (
             <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: "40px", background: "#ffffff", borderRadius: "16px", color: "#64748b" }}>
               No maintenance requests filed.
             </div>
           ) : (
-            tickets.map((t) => (
-              <div key={t.id} className="maintenance-ticket-card">
+            displayedTickets.map((t, i) => (
+              <div key={t._id || t.id || i} className="maintenance-ticket-card">
                 <div className="ticket-header-img">
                   <img src={t.image} alt="leak" />
                   <span className={`ticket-urgency-badge ${t.urgency}`}>
@@ -105,7 +175,7 @@ export default function MaintenancePage() {
                 
                 <div className="ticket-body">
                   <div className="ticket-meta-row">
-                    <span>TICKET #{t.id}</span>
+                    <span>TICKET #{(t._id || t.id || "000000").slice(-6).toUpperCase()}</span>
                     <span>Flat {t.flatNo}</span>
                   </div>
                   
@@ -124,25 +194,25 @@ export default function MaintenancePage() {
                 <div className="ticket-footer">
                   <div className="ticket-cost-info">
                     <span className="ticket-cost-label">Est. Cost</span>
-                    <span className="ticket-cost-val">{t.cost || "$100 - $200"}</span>
+                    <span className="ticket-cost-val">{t.cost || "To Be Determined"}</span>
                   </div>
                   
-                  <div style={{ display: "flex", gap: "8px" }}>
+                  <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", justifyContent: "flex-end" }}>
                     {t.status !== "Fixed" ? (
                       <>
                         {t.status === "Pending" && (
                           <button
-                            onClick={() => handleUpdateStatus(t.id, "In Progress")}
+                            onClick={() => handleUpdateStatus(t._id || t.id, "In Progress")}
                             className="card-btn secondary"
-                            style={{ padding: "8px 12px", border: "1px solid #1a56db", fontSize: "12px" }}
+                            style={{ padding: "6px 10px", border: "1px solid #1a56db", fontSize: "12px", flexShrink: 0 }}
                           >
                             Set In Progress
                           </button>
                         )}
                         <button
-                          onClick={() => handleUpdateStatus(t.id, "Fixed")}
+                          onClick={() => handleUpdateStatus(t._id || t.id, "Fixed")}
                           className="card-btn primary"
-                          style={{ padding: "8px 12px", background: "#10b981", borderColor: "#10b981", fontSize: "12px", color: "#ffffff" }}
+                          style={{ padding: "6px 10px", background: "#10b981", borderColor: "#10b981", fontSize: "12px", color: "#ffffff", flexShrink: 0 }}
                         >
                           Mark Fixed
                         </button>
@@ -153,9 +223,9 @@ export default function MaintenancePage() {
                       </span>
                     )}
                     <button
-                      onClick={() => handleDeleteTicket(t.id)}
+                      onClick={() => handleDeleteTicket(t._id || t.id)}
                       className="card-btn primary"
-                      style={{ padding: "8px", background: "#ef4444", border: "none", flexGrow: 0 }}
+                      style={{ padding: "8px", background: "#ef4444", border: "none", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
                     >
                       <Trash2 size={14} />
                     </button>
@@ -235,15 +305,19 @@ export default function MaintenancePage() {
 
             {/* Description Textarea */}
             <div className="form-group">
-              <label className="form-label">Issue Description</label>
+              <label className="form-label">
+                Issue Description
+                {isAnalyzing && <span style={{ marginLeft: "8px", fontSize: "12px", color: "#1a56db", fontWeight: "bold" }}>✨ AI Analyzing Image...</span>}
+              </label>
               <div className="form-input-wrapper" style={{ height: "auto", padding: "12px" }}>
                 <textarea
                   className="form-input"
                   rows={4}
-                  placeholder="Tell us exactly what is wrong, including location in the unit..."
+                  placeholder={isAnalyzing ? "AI is diagnosing the issue..." : "Tell us exactly what is wrong, including location in the unit..."}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   style={{ height: "100%", width: "100%", border: "none", outline: "none", resize: "none" }}
+                  disabled={isAnalyzing}
                   required
                 />
               </div>
@@ -274,13 +348,13 @@ export default function MaintenancePage() {
                 {tenantTickets.length === 0 ? (
                   <tr>
                     <td colSpan={4} style={{ textAlign: "center", padding: "24px", color: "#64748b" }}>
-                      You haven't filed any repair requests yet.
+                      You haven&apos;t filed any repair requests yet.
                     </td>
                   </tr>
                 ) : (
-                  tenantTickets.map(t => (
-                    <tr key={t.id}>
-                      <td><span style={{ fontWeight: 700 }}>#{t.id}</span></td>
+                  tenantTickets.map((t, i) => (
+                    <tr key={t._id || t.id || i}>
+                      <td><span style={{ fontWeight: 700 }}>#{(t._id || t.id || "000000").slice(-6).toUpperCase()}</span></td>
                       <td style={{ maxWidth: "200px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.description}</td>
                       <td>
                         <span style={{ fontSize: "12px", color: "#475569" }}>
