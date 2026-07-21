@@ -9,23 +9,23 @@ import {
   Shield,
   Check,
   Info,
+  Home,
+  Zap,
+  Droplets,
+  ShieldCheck,
 } from "lucide-react";
-import {
-  getBills,
-  addBill,
-  payBill,
-  getUnits,
-  Bill,
-  Unit,
-} from "@/lib/mockData";
+import { getBills as fetchBillsApi, createBill as addBillApi, payBill as payBillApi, getUnits as fetchUnitsApi, getMyBills as fetchMyBillsApi } from "@/lib/api/dashboard";
 import { useAuth } from "@/lib/context/AuthContext";
+import { useAlert } from "@/lib/context/AlertContext";
+import RequireKyc from "@/components/RequireKyc";
 
 export default function BillingPage() {
   const { user } = useAuth();
+  const { showAlert } = useAlert();
 
   // States
-  const [bills, setBills] = useState<Bill[]>([]);
-  const [units, setUnits] = useState<Unit[]>([]);
+  const [bills, setBills] = useState<any[]>([]);
+  const [units, setUnits] = useState<any[]>([]);
 
   // Generator states
   const [genFlat, setGenFlat] = useState("");
@@ -34,7 +34,7 @@ export default function BillingPage() {
     year: "numeric",
   });
   const [genMonth, setGenMonth] = useState(currentMonth);
-  const [prevReading, setPrevReading] = useState(0);
+  const [prevReading, setPrevReading] = useState<number | "">("");
   const [currReading, setCurrReading] = useState("");
   const [waterCost, setWaterCost] = useState("");
   const [serviceFee, setServiceFee] = useState("");
@@ -44,25 +44,54 @@ export default function BillingPage() {
   const [monthFilter, setMonthFilter] = useState("all");
 
   // Payment preview modal
-  const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
+  const [selectedBill, setSelectedBill] = useState<any | null>(null);
   const [showPayModal, setShowPayModal] = useState(false);
 
+  const normalizeBills = (rawBills: any[]) =>
+    rawBills.map(b => ({ ...b, _id: b._id || b.id }));
+
+  const loadData = async () => {
+    try {
+      if (user?.role === "Tenant") {
+        // Tenants use dedicated /bills/mine endpoint (matches by phone → flatNo)
+        const [myBillsRes, unitsRes] = await Promise.all([
+          fetchMyBillsApi(),
+          fetchUnitsApi()
+        ]);
+        setBills(normalizeBills(myBillsRes.data.data || []));
+        setUnits(unitsRes.data.data || []);
+      } else {
+        const [billsRes, unitsRes] = await Promise.all([
+          fetchBillsApi(),
+          fetchUnitsApi()
+        ]);
+        setBills(normalizeBills(billsRes.data.data || []));
+        setUnits(unitsRes.data.data || []);
+      }
+    } catch (error) {
+      console.error("Failed to load data", error);
+    }
+  };
+
   useEffect(() => {
-    setBills(getBills());
-    setUnits(getUnits());
-  }, []);
+    if (user?.role) {
+      loadData();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.role ?? ""]);
 
   // Handler to generate bill
-  const handleGenerateBill = (e: React.FormEvent) => {
+  const handleGenerateBill = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!genFlat || !currReading || !waterCost || !serviceFee) {
-      alert("Please fill in all fields.");
+      showAlert("Please fill in all fields.", "Missing Fields");
       return;
     }
 
     const currVal = Number(currReading);
-    if (currVal < prevReading) {
-      alert("Current reading cannot be lower than previous reading.");
+    const prevVal = Number(prevReading) || 0;
+    if (currVal < prevVal) {
+      showAlert("Current reading cannot be lower than previous reading.", "Invalid Reading");
       return;
     }
 
@@ -71,41 +100,55 @@ export default function BillingPage() {
     const rentAmount = selectedUnit ? selectedUnit.rent : 0;
 
     // Calculate electricity
-    const consumption = currVal - prevReading;
+    const consumption = currVal - prevVal;
     const electricityCost = consumption * 12; // 12 NPR per unit
 
-    // Add to storage
-    addBill(
-      genFlat,
-      genMonth,
-      rentAmount,
-      electricityCost,
-      Number(waterCost),
-      Number(serviceFee),
-    );
+    try {
+      await addBillApi({
+        flatNo: genFlat,
+        month: genMonth,
+        rentCost: rentAmount,
+        electricityCost,
+        waterCost: Number(waterCost),
+        serviceCost: Number(serviceFee),
+      });
 
-    // Refresh bills
-    setBills(getBills());
+      // Refresh bills
+      await loadData();
 
-    // Reset inputs
-    setCurrReading("");
-    alert(`Invoice created successfully for Flat ${genFlat}!`);
+      // Reset inputs
+      setCurrReading("");
+      showAlert(`Invoice created successfully for Flat ${genFlat}!`, "Success");
+    } catch (error) {
+      console.error("Failed to generate bill", error);
+      showAlert("Failed to generate bill.", "Error");
+    }
   };
 
   // Handler to process simulated Khalti pay
-  const handleKhaltiPay = () => {
-    if (selectedBill) {
-      payBill(selectedBill.id);
+  const handleKhaltiPay = async () => {
+    if (!selectedBill) return;
+    const billId = selectedBill._id || selectedBill.id;
+    if (!billId || billId === "undefined") {
+      showAlert("Could not find a valid bill ID. Please refresh the page and try again.", "Error");
+      return;
+    }
+    try {
+      await payBillApi(billId, "Khalti");
 
       // Refresh
-      setBills(getBills());
+      await loadData();
       setShowPayModal(false);
       setSelectedBill(null);
-      alert(
+      showAlert(
         "Thank you! Payment of NPR " +
           selectedBill.totalCost.toLocaleString() +
           " processed successfully via Khalti Wallet!",
+        "Payment Success"
       );
+    } catch (error) {
+      console.error("Failed to process payment", error);
+      showAlert("Payment processing failed.", "Error");
     }
   };
 
@@ -196,7 +239,7 @@ export default function BillingPage() {
                 ) : (
                   filteredBills.map((b) => (
                     <tr
-                      key={b.id}
+                      key={b._id || b.id || Math.random()}
                       className={b.status === "Pending" ? "unpaid-row" : ""}
                     >
                       <td>
@@ -234,8 +277,9 @@ export default function BillingPage() {
     // Current calculations
     const selectedUnit = units.find((u) => u.flatNo === genFlat);
     const rentVal = selectedUnit ? selectedUnit.rent : 0;
-    const currVal = Number(currReading) || prevReading;
-    const consumption = currVal - prevReading;
+    const prevValNum = Number(prevReading) || 0;
+    const currVal = Number(currReading) || prevValNum;
+    const consumption = currVal - prevValNum;
     const electricityCost = consumption * 12;
     const totalVal =
       rentVal +
@@ -280,8 +324,8 @@ export default function BillingPage() {
                       <option value="">-- Select flat --</option>
                       {units
                         .filter((u) => u.status === "Occupied")
-                        .map((u) => (
-                          <option key={u.id} value={u.flatNo}>
+                        .map((u, i) => (
+                          <option key={u._id || u.id || i} value={u.flatNo}>
                             Flat {u.flatNo} ({u.tenantName})
                           </option>
                         ))}
@@ -291,14 +335,14 @@ export default function BillingPage() {
                 <div className="form-group" style={{ marginBottom: 0 }}>
                   <label className="form-label">Billing Month</label>
                   <div className="form-select-wrapper">
-                    <select
-                      className="form-select"
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="e.g. July 2026"
                       value={genMonth}
                       onChange={(e) => setGenMonth(e.target.value)}
                       required
-                    >
-                      <option value={currentMonth}>{currentMonth}</option>
-                    </select>
+                    />
                   </div>
                 </div>
               </div>
@@ -314,15 +358,14 @@ export default function BillingPage() {
                   <label className="form-label">
                     Previous Meter Reading (kWh)
                   </label>
-                  <div
-                    className="form-input-wrapper"
-                    style={{ backgroundColor: "#f1f5f9" }}
-                  >
+                  <div className="form-input-wrapper">
                     <input
                       type="number"
                       className="form-input"
+                      placeholder="e.g. 12500"
                       value={prevReading}
-                      readOnly
+                      onChange={(e) => setPrevReading(e.target.value ? Number(e.target.value) : "")}
+                      required
                     />
                   </div>
                 </div>
@@ -358,6 +401,7 @@ export default function BillingPage() {
                     <input
                       type="number"
                       className="form-input"
+                      placeholder="e.g. 500"
                       value={waterCost}
                       onChange={(e) => setWaterCost(e.target.value)}
                       required
@@ -372,6 +416,7 @@ export default function BillingPage() {
                     <input
                       type="number"
                       className="form-input"
+                      placeholder="e.g. 1000"
                       value={serviceFee}
                       onChange={(e) => setServiceFee(e.target.value)}
                       required
@@ -380,9 +425,11 @@ export default function BillingPage() {
                 </div>
               </div>
 
-              <button type="submit" className="btn-primary">
-                Generate and Disseminate Invoice
-              </button>
+              <RequireKyc fallback="alert">
+                <button type="submit" className="btn-primary">
+                  Generate and Disseminate Invoice
+                </button>
+              </RequireKyc>
             </form>
           </div>
 
@@ -444,7 +491,8 @@ export default function BillingPage() {
 
   // 3. TENANT VIEW: BILLING & PAYMENT (Page 13)
   const renderTenantBilling = () => {
-    const tenantBills = bills.filter((b) => b.tenantName === user?.full_name);
+    // bills state is already pre-filtered to this tenant's flatNo via /bills/mine endpoint
+    const tenantBills = bills;
     const pendingBill = tenantBills.find((b) => b.status === "Pending");
 
     return (
@@ -464,7 +512,7 @@ export default function BillingPage() {
             <div>
               <div className="bill-item-row">
                 <div className="bill-item-info">
-                  <div className="bill-item-icon-wrapper">🏠</div>
+                  <div className="bill-item-icon-wrapper"><Home size={20} color="#1a56db" /></div>
                   <div>
                     <span className="bill-item-title">Monthly Flat Rent</span>
                     <p className="bill-item-desc">Base accommodation billing</p>
@@ -477,7 +525,7 @@ export default function BillingPage() {
 
               <div className="bill-item-row">
                 <div className="bill-item-info">
-                  <div className="bill-item-icon-wrapper">⚡</div>
+                  <div className="bill-item-icon-wrapper"><Zap size={20} color="#eab308" /></div>
                   <div>
                     <span className="bill-item-title">Electricity Bill</span>
                     <p className="bill-item-desc">Metered energy consumption</p>
@@ -490,7 +538,7 @@ export default function BillingPage() {
 
               <div className="bill-item-row">
                 <div className="bill-item-info">
-                  <div className="bill-item-icon-wrapper">💧</div>
+                  <div className="bill-item-icon-wrapper"><Droplets size={20} color="#0ea5e9" /></div>
                   <div>
                     <span className="bill-item-title">Water & Sewage</span>
                     <p className="bill-item-desc">Fixed utility distribution</p>
@@ -503,7 +551,7 @@ export default function BillingPage() {
 
               <div className="bill-item-row">
                 <div className="bill-item-info">
-                  <div className="bill-item-icon-wrapper">🧹</div>
+                  <div className="bill-item-icon-wrapper"><ShieldCheck size={20} color="#10b981" /></div>
                   <div>
                     <span className="bill-item-title">
                       Common Area Maintenance
@@ -542,15 +590,17 @@ export default function BillingPage() {
                   Dues status: <b>UNPAID</b>
                 </span>
               </div>
-              <button
-                onClick={() => {
-                  setSelectedBill(pendingBill);
-                  setShowPayModal(true);
-                }}
-                className="btn-khalti"
-              >
-                Pay with Khalti
-              </button>
+              <RequireKyc fallback="alert">
+                <button
+                  onClick={() => {
+                    setSelectedBill(pendingBill);
+                    setShowPayModal(true);
+                  }}
+                  className="btn-khalti"
+                >
+                  Pay with Khalti
+                </button>
+              </RequireKyc>
             </div>
           </div>
         ) : (
@@ -601,8 +651,8 @@ export default function BillingPage() {
                 ) : (
                   tenantBills
                     .filter((b) => b.status === "Paid")
-                    .map((b) => (
-                      <tr key={b.id}>
+                    .map((b, i) => (
+                      <tr key={b._id || b.id || i}>
                         <td>{b.month}</td>
                         <td>{b.paymentDate}</td>
                         <td>{b.paymentMethod}</td>
