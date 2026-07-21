@@ -11,15 +11,17 @@ import {
   Phone,
   Check,
 } from "lucide-react";
-import { getTenants, addTenant, getUnits, Tenant, Unit } from "@/lib/mockData";
+import { getTenants as fetchTenantsApi, createTenant as addTenantApi, getUnits as fetchUnitsApi } from "@/lib/api/dashboard";
 import { useAuth } from "@/lib/context/AuthContext";
+import { useAlert } from "@/lib/context/AlertContext";
 
 export default function TenantsPage() {
   const { user } = useAuth();
+  const { showAlert } = useAlert();
 
   // States
-  const [tenants, setTenants] = useState<Tenant[]>([]);
-  const [units, setUnits] = useState<Unit[]>([]);
+  const [tenants, setTenants] = useState<any[]>([]);
+  const [units, setUnits] = useState<any[]>([]);
 
   // Search
   const [search, setSearch] = useState("");
@@ -32,29 +34,45 @@ export default function TenantsPage() {
     flatNo: "",
   });
 
+  const loadData = async () => {
+    try {
+      const [tenantsRes, unitsRes] = await Promise.all([
+        fetchTenantsApi(),
+        fetchUnitsApi()
+      ]);
+      setTenants(tenantsRes.data.data || []);
+      setUnits(unitsRes.data.data || []);
+    } catch (error) {
+      console.error("Failed to load data", error);
+    }
+  };
+
   useEffect(() => {
-    setTenants(getTenants());
-    setUnits(getUnits());
+    loadData();
   }, []);
 
-  const handleAddTenantSubmit = (e: React.FormEvent) => {
+  const handleAddTenantSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const { name, phone, flatNo } = newTenantData;
     if (!name || !phone || !flatNo) {
-      alert("Please fill in all details.");
+      showAlert("Please fill in all details.", "Required");
       return;
     }
 
-    addTenant(name, phone, flatNo);
-
-    // Refresh states
-    setTenants(getTenants());
-    setUnits(getUnits());
-
-    // Reset and Close
-    setShowAddTenantModal(false);
-    setNewTenantData({ name: "", phone: "", flatNo: "" });
-    alert("Tenant added successfully and unique House Code generated!");
+    try {
+      await addTenantApi({ name, phone, flatNo });
+      
+      // Refresh states
+      await loadData();
+      
+      // Reset and Close
+      setShowAddTenantModal(false);
+      setNewTenantData({ name: "", phone: "", flatNo: "" });
+      showAlert("Tenant added successfully and unique House Code generated!", "Success");
+    } catch (error) {
+      console.error("Failed to add tenant", error);
+      showAlert("Failed to add tenant.", "Error");
+    }
   };
 
   const getVacantUnits = () => {
@@ -139,8 +157,8 @@ export default function TenantsPage() {
                     </td>
                   </tr>
                 ) : (
-                  filteredTenants.map((t) => (
-                    <tr key={t.id}>
+                  filteredTenants.map((t, i) => (
+                    <tr key={t._id || t.id || i}>
                       <td>
                         <div style={{ fontWeight: 600, color: "#0f172a" }}>
                           {t.name}
@@ -242,8 +260,8 @@ export default function TenantsPage() {
                       required
                     >
                       <option value="">-- Choose Flat --</option>
-                      {vacantFlats.map((vf) => (
-                        <option key={vf.id} value={vf.flatNo}>
+                      {vacantFlats.map((vf, i) => (
+                        <option key={vf._id || vf.id || i} value={vf.flatNo}>
                           Flat {vf.flatNo} ({vf.floor}) - NPR{" "}
                           {vf.rent.toLocaleString()}
                         </option>
@@ -337,8 +355,8 @@ export default function TenantsPage() {
                     </td>
                   </tr>
                 ) : (
-                  filteredTenants.map((t) => (
-                    <tr key={t.id}>
+                  filteredTenants.map((t, i) => (
+                    <tr key={t._id || t.id || i}>
                       <td>
                         <div style={{ fontWeight: 600, color: "#0f172a" }}>
                           {t.name}
