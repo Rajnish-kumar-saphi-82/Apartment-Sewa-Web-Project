@@ -3,11 +3,15 @@
 
 import { useEffect, useState } from "react";
 import { Search, Plus, Trash2, Edit, CheckCircle, ShieldAlert, X } from "lucide-react";
-import { getUnits, addUnit, getTenants, STORAGE_KEYS } from "@/lib/mockData";
+import { getUnits as fetchUnitsApi, createUnit as addUnitApi, deleteUnit as deleteUnitApi, updateUnitStatus as updateUnitStatusApi } from "@/lib/api/dashboard";
+import { getAdminUsers } from "@/lib/api/admin-users";
 import { useAuth } from "@/lib/context/AuthContext";
+import { useAlert } from "@/lib/context/AlertContext";
+import RequireKyc from "@/components/RequireKyc";
 
 export default function PropertiesPage() {
   const { user } = useAuth();
+  const { showAlert, showConfirm } = useAlert();
   
   // States
   const [units, setUnits] = useState<any[]>([]);
@@ -25,36 +29,49 @@ export default function PropertiesPage() {
     flatNo: "",
     floor: "",
     rent: "",
-    image: ""
   });
+  const [unitImage, setUnitImage] = useState<File | null>(null);
+
+  // Assign Modal
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [assigningUnit, setAssigningUnit] = useState<any>(null);
+  const [selectedTenantPhone, setSelectedTenantPhone] = useState("");
+
+  const loadUnits = async () => {
+    try {
+      const res = await fetchUnitsApi();
+      setUnits(res.data.data || []);
+    } catch (err) {
+      console.error("Failed to fetch units:", err);
+    }
+  };
+
+  const loadUsers = async () => {
+    try {
+      const res = await getAdminUsers({ limit: 1000 });
+      setUsers(res.data || []);
+    } catch (err) {
+      console.error("Failed to fetch users:", err);
+    }
+  };
 
   useEffect(() => {
-    setUnits(getUnits());
-    setTenants(getTenants());
-    
-    // Sync with localStorage
-    if (typeof window !== "undefined") {
-      const storedUsers = localStorage.getItem(STORAGE_KEYS.adminUsers);
-      if (storedUsers) {
-        setUsers(JSON.parse(storedUsers));
-      } else {
-        localStorage.setItem(STORAGE_KEYS.adminUsers, JSON.stringify([]));
-        setUsers([]);
-      }
+    loadUnits();
+    if (user?.role === "Owner" || user?.role === "Admin") {
+      loadUsers();
     }
-  }, []);
+  }, [user]);
 
+  // Not used by admin anymore, but kept for legacy UI functions if any
   const saveUsers = (newList: any[]) => {
     setUsers(newList);
-    if (typeof window !== "undefined") {
-      localStorage.setItem(STORAGE_KEYS.adminUsers, JSON.stringify(newList));
-    }
   };
 
   // 1. ADMIN VIEW: USER MANAGEMENT (Page 4)
   const handleToggleStatus = (userId: string) => {
     const updated = users.map(u => {
-      if (u.id === userId) {
+      const currentId = u._id || u.id;
+      if (currentId === userId) {
         const nextStatus = u.status === "Active" ? "Suspended" : "Active";
         return { ...u, status: nextStatus };
       }
@@ -63,16 +80,16 @@ export default function PropertiesPage() {
     saveUsers(updated);
   };
 
-  const handleDeleteUser = (userId: string) => {
-    if (confirm("Are you sure you want to delete this user? This action cannot be undone.")) {
-      const filtered = users.filter(u => u.id !== userId);
+  const handleDeleteUser = async (userId: string) => {
+    if (await showConfirm("Are you sure you want to delete this user? This action cannot be undone.")) {
+      const filtered = users.filter(u => (u._id || u.id) !== userId);
       saveUsers(filtered);
     }
   };
 
   const renderAdminUserManagement = () => {
     const filteredUsers = users.filter(u => {
-      const matchSearch = u.name.toLowerCase().includes(search.toLowerCase()) || u.phone.includes(search);
+      const matchSearch = (u.full_name ?? u.name ?? "").toLowerCase().includes(search.toLowerCase()) || (u.phone ?? "").includes(search);
       const matchRole = roleFilter === "all" ? true : u.role === roleFilter;
       const matchStatus = statusFilter === "all" ? true : u.status === statusFilter;
       return matchSearch && matchRole && matchStatus;
@@ -141,9 +158,11 @@ export default function PropertiesPage() {
                     <td colSpan={5} style={{ textAlign: "center", padding: "24px", color: "#64748b" }}>No users found matching filters.</td>
                   </tr>
                 ) : (
-                  filteredUsers.map((u) => (
-                    <tr key={u.id}>
-                      <td><span style={{ fontWeight: 600 }}>{u.name}</span></td>
+                  filteredUsers.map((u, i) => {
+                    const userId = u._id || u.id || i.toString();
+                    return (
+                    <tr key={userId}>
+                      <td><span style={{ fontWeight: 600 }}>{u.full_name || u.name || "Unknown User"}</span></td>
                       <td>{u.phone}</td>
                       <td>
                         <span className={`status-badge ${u.role === "Owner" ? "active" : "success"}`}>
@@ -158,14 +177,14 @@ export default function PropertiesPage() {
                       <td>
                         <div style={{ display: "flex", gap: "8px" }}>
                           <button
-                            onClick={() => handleToggleStatus(u.id)}
+                            onClick={() => handleToggleStatus(userId)}
                             className="card-btn secondary"
                             style={{ padding: "6px 12px", border: "1px solid #64748b", color: u.status === "Active" ? "#ef4444" : "#10b981", minWidth: "90px" }}
                           >
                             {u.status === "Active" ? "Suspend" : "Activate"}
                           </button>
                           <button
-                            onClick={() => handleDeleteUser(u.id)}
+                            onClick={() => handleDeleteUser(userId)}
                             className="card-btn primary"
                             style={{ padding: "6px 12px", background: "#ef4444", border: "none", display: "flex", alignItems: "center", gap: "4px" }}
                           >
@@ -174,7 +193,8 @@ export default function PropertiesPage() {
                         </div>
                       </td>
                     </tr>
-                  ))
+                    );
+                  })
                 )}
               </tbody>
             </table>
@@ -185,33 +205,87 @@ export default function PropertiesPage() {
   };
 
   // 2. OWNER VIEW: FLAT MANAGEMENT (Page 8)
-  const handleAddUnit = (e: React.FormEvent) => {
+  const handleAddUnit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newUnitData.flatNo || !newUnitData.floor || !newUnitData.rent) {
-      alert("Please fill in all required fields.");
+      showAlert("Please fill in all required fields.", "Missing Fields");
       return;
     }
     
-    addUnit(newUnitData.flatNo, newUnitData.floor, Number(newUnitData.rent), newUnitData.image);
-    setUnits(getUnits());
-    setShowAddUnitModal(false);
-    setNewUnitData({ flatNo: "", floor: "", rent: "", image: "" });
+    try {
+      const formData = new FormData();
+      formData.append("flatNo", newUnitData.flatNo);
+      formData.append("floor", newUnitData.floor);
+      formData.append("rent", newUnitData.rent);
+      if (unitImage) {
+        formData.append("image", unitImage);
+      }
+      
+      await addUnitApi(formData);
+      await loadUnits();
+      setShowAddUnitModal(false);
+      setNewUnitData({ flatNo: "", floor: "", rent: "" });
+      setUnitImage(null);
+      loadUnits();
+    } catch (err) {
+      console.error(err);
+      showAlert("Failed to add unit. Please try again.", "Error");
+    }
   };
 
-  const handleDeleteUnit = (unitId: string) => {
-    if (confirm("Are you sure you want to delete this unit?")) {
-      const stored = getUnits();
-      const filtered = stored.filter(u => u.id !== unitId);
-      if (typeof window !== "undefined") {
-        localStorage.setItem(STORAGE_KEYS.units, JSON.stringify(filtered));
+  const handleDeleteUnit = async (id: string) => {
+    if (await showConfirm("Are you sure you want to delete this unit?")) {
+      try {
+        await deleteUnitApi(id);
+        loadUnits();
+      } catch (err) {
+        console.error(err);
       }
-      setUnits(filtered);
+    }
+  };
+
+  const handleAssignTenantSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!assigningUnit || !selectedTenantPhone) return;
+
+    const selectedUser = users.find((u) => u.phone === selectedTenantPhone);
+    const tenantName = selectedUser ? selectedUser.full_name : "";
+
+    try {
+      await updateUnitStatusApi(assigningUnit._id || assigningUnit.id, {
+        status: "Occupied",
+        tenantName: tenantName,
+        tenantPhone: selectedTenantPhone,
+      });
+      await loadUnits();
+      setShowAssignModal(false);
+      setAssigningUnit(null);
+      setSelectedTenantPhone("");
+      loadUnits();
+    } catch (err) {
+      console.error(err);
+      showAlert("Failed to assign tenant", "Error");
+    }
+  };
+
+  const handleUnassignTenant = async (unit: any) => {
+    if (await showConfirm(`Remove tenant ${unit.tenantName} from Flat ${unit.flatNo}?`)) {
+      try {
+        await updateUnitStatusApi(unit._id || unit.id, {
+          status: "Vacant",
+          tenantName: "",
+          tenantPhone: "",
+        });
+        await loadUnits();
+      } catch (error) {
+        console.error("Failed to unassign tenant", error);
+      }
     }
   };
 
   const renderOwnerFlatManagement = () => {
     const filteredUnits = units.filter(u => 
-      u.flatNo.includes(search) || u.floor.toLowerCase().includes(search.toLowerCase())
+      (u.flatNo ?? "").includes(search) || (u.floor ?? "").toLowerCase().includes(search.toLowerCase())
     );
 
     return (
@@ -222,9 +296,11 @@ export default function PropertiesPage() {
             <p className="page-subtitle">Configure flats, view rent structures, and occupancy status</p>
           </div>
           <div className="page-actions">
-            <button onClick={() => setShowAddUnitModal(true)} className="sidebar-add-btn" style={{ width: "auto" }}>
-              <Plus size={16} /> Add Unit
-            </button>
+            <RequireKyc fallback="alert">
+              <button onClick={() => setShowAddUnitModal(true)} className="sidebar-add-btn" style={{ width: "auto" }}>
+                <Plus size={16} /> Add Unit
+              </button>
+            </RequireKyc>
           </div>
         </div>
 
@@ -249,8 +325,8 @@ export default function PropertiesPage() {
               No units registered. Add a unit using the button above.
             </div>
           ) : (
-            filteredUnits.map((u) => (
-              <div key={u.id} className="interactive-card">
+            filteredUnits.map((u, i) => (
+              <div key={u._id || u.id || i} className="interactive-card">
                 <div className="card-image-wrapper">
                   <img src={u.image} className="card-image" alt="flat" />
                   <span className={`card-badge ${u.status === "Occupied" ? "success" : "suspended"}`} style={{ position: "absolute", top: "12px", right: "12px", background: u.status === "Occupied" ? "#10b981" : "#64748b" }}>
@@ -268,9 +344,29 @@ export default function PropertiesPage() {
                       Tenant: <b>{u.tenantName}</b>
                     </div>
                   )}
-                  <div className="card-footer-actions" style={{ marginTop: "12px" }}>
+                  <div className="card-footer-actions" style={{ marginTop: "12px", display: "flex", gap: "8px" }}>
+                    {u.status === "Vacant" ? (
+                      <button
+                        onClick={() => {
+                          setAssigningUnit(u);
+                          setShowAssignModal(true);
+                        }}
+                        className="card-btn secondary"
+                        style={{ flexGrow: 1, padding: "8px 12px", background: "#f1f5f9", color: "#1e293b", border: "1px solid #e2e8f0" }}
+                      >
+                        Assign Tenant
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleUnassignTenant(u)}
+                        className="card-btn secondary"
+                        style={{ flexGrow: 1, padding: "8px 12px", background: "#fff1f2", color: "#e11d48", border: "1px solid #fecdd3" }}
+                      >
+                        Remove Tenant
+                      </button>
+                    )}
                     <button
-                      onClick={() => handleDeleteUnit(u.id)}
+                      onClick={() => handleDeleteUnit(u._id || u.id)}
                       className="card-btn primary"
                       style={{ background: "#ef4444", borderColor: "#ef4444", flexGrow: 0, padding: "8px 12px" }}
                     >
@@ -334,19 +430,66 @@ export default function PropertiesPage() {
                   </div>
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Photo URL (Optional)</label>
+                  <label className="form-label">Photo Image (Optional)</label>
                   <div className="form-input-wrapper">
                     <input
-                      type="text"
+                      type="file"
+                      accept="image/*"
                       className="form-input"
-                      placeholder="Image address URL"
-                      value={newUnitData.image}
-                      onChange={(e) => setNewUnitData({ ...newUnitData, image: e.target.value })}
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files.length > 0) {
+                          setUnitImage(e.target.files[0]);
+                        }
+                      }}
                     />
                   </div>
                 </div>
                 <button type="submit" className="btn-primary">
                   Create Flat Unit
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Assign Tenant Modal */}
+        {showAssignModal && (
+          <div className="modal-overlay">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h3 className="modal-title">Assign Tenant to Flat {assigningUnit?.flatNo}</h3>
+                <button onClick={() => setShowAssignModal(false)} className="modal-close-btn">
+                  <X size={20} />
+                </button>
+              </div>
+              <form onSubmit={handleAssignTenantSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                <div className="form-group">
+                  <label className="form-label">Select Registered Tenant</label>
+                  <div className="form-select-wrapper">
+                    <select
+                      className="form-select"
+                      value={selectedTenantPhone}
+                      onChange={(e) => setSelectedTenantPhone(e.target.value)}
+                      required
+                    >
+                      <option value="">-- Select a tenant --</option>
+                      {users
+                        .filter((user) => user.role === "Tenant")
+                        .map((tenant, idx) => (
+                          <option key={idx} value={tenant.phone}>
+                            {tenant.full_name} ({tenant.phone})
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                  {users.filter((user) => user.role === "Tenant").length === 0 && (
+                    <p style={{ fontSize: "12px", color: "#ef4444", marginTop: "8px" }}>
+                      No tenants found. Add a tenant from the User Management page first.
+                    </p>
+                  )}
+                </div>
+                <button type="submit" className="btn-primary" disabled={!selectedTenantPhone}>
+                  Confirm Assignment
                 </button>
               </form>
             </div>
@@ -358,7 +501,7 @@ export default function PropertiesPage() {
 
   // 3. TENANT VIEW: RESIDENCE DETAILS
   const renderTenantResidenceInfo = () => {
-    const tenantUnit = units.find(u => u.tenantPhone === user?.phone || u.tenantName === user?.full_name) || units[0];
+    const tenantUnit = units.find(u => u.tenantPhone === user?.phone || u.tenantName === user?.full_name);
 
     return (
       <div>
