@@ -10,6 +10,8 @@ import {
   Search,
   Trash2,
   X,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import {
   AdminUser,
@@ -48,6 +50,10 @@ const getErrorMessage = (exception: unknown, fallback: string) => {
   return fallback;
 };
 
+const getUserName = (user: any) => {
+  return user?.full_name || user?.fullName || user?.name || "Unknown User";
+};
+
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [meta, setMeta] = useState<AdminUsersMeta>({
@@ -69,6 +75,7 @@ export default function AdminUsersPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [deletingUser, setDeletingUser] = useState<AdminUser | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const isEditing = Boolean(editingUser);
 
@@ -305,7 +312,7 @@ export default function AdminUsersPage() {
                       <td className="admin-id-cell">{shortId(user._id)}</td>
                       <td>
                         <div className="entity-info">
-                          <span className="entity-name">{user.full_name}</span>
+                          <span className="entity-name">{getUserName(user)}</span>
                           <span className="entity-subtext">
                             {user.country_code} {user.phone}
                           </span>
@@ -332,14 +339,14 @@ export default function AdminUsersPage() {
                           <button
                             className="admin-icon-btn"
                             onClick={() => openEditForm(user)}
-                            aria-label={`Edit ${user.full_name}`}
+                            aria-label={`Edit ${getUserName(user)}`}
                           >
                             <Edit3 size={16} />
                           </button>
                           <button
                             className="admin-icon-btn danger"
                             onClick={() => setDeletingUser(user)}
-                            aria-label={`Delete ${user.full_name}`}
+                            aria-label={`Delete ${getUserName(user)}`}
                           >
                             <Trash2 size={16} />
                           </button>
@@ -432,15 +439,36 @@ export default function AdminUsersPage() {
               {!isEditing && (
                 <>
                   <label className="form-label">Password</label>
-                  <input
-                    className="admin-form-input"
-                    value={formData.password}
-                    onChange={(event) =>
-                      updateField("password", event.target.value)
-                    }
-                    placeholder="At least 6 characters"
-                    type="password"
-                  />
+                  <div style={{ position: "relative" }}>
+                    <input
+                      className="admin-form-input"
+                      value={formData.password}
+                      onChange={(event) =>
+                        updateField("password", event.target.value)
+                      }
+                      placeholder="At least 6 characters"
+                      type={showPassword ? "text" : "password"}
+                      style={{ paddingRight: "40px" }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      style={{
+                        position: "absolute",
+                        right: "12px",
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        background: "none",
+                        border: "none",
+                        cursor: "pointer",
+                        color: "#64748b",
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
                   {formErrors.password && (
                     <p className="form-error">{formErrors.password}</p>
                   )}
@@ -540,7 +568,7 @@ export default function AdminUsersPage() {
               </button>
             </div>
             <p className="admin-delete-text">
-              Delete <strong>{deletingUser.full_name}</strong>? This action
+              Delete <strong>{getUserName(deletingUser)}</strong>? This action
               cannot be undone.
             </p>
             <div className="admin-modal-actions">
