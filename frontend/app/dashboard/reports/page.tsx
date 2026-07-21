@@ -11,49 +11,65 @@ import {
   Eye,
   Send,
 } from "lucide-react";
-import { getNotices, addNotice, Notice, STORAGE_KEYS } from "@/lib/mockData";
+import { getNotices as fetchNoticesApi, createNotice as addNoticeApi, deleteNotice as deleteNoticeApi } from "@/lib/api/dashboard";
 import { useAuth } from "@/lib/context/AuthContext";
+import { useAlert } from "@/lib/context/AlertContext";
 
 export default function ReportsPage() {
   const { user } = useAuth();
+  const { showAlert, showConfirm } = useAlert();
 
   // States
-  const [notices, setNotices] = useState<Notice[]>([]);
+  const [notices, setNotices] = useState<any[]>([]);
 
   // Admin form states
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
 
+  const loadNotices = async () => {
+    try {
+      const res = await fetchNoticesApi();
+      setNotices(res.data.data || []);
+    } catch (error) {
+      console.error("Failed to fetch notices", error);
+    }
+  };
+
   useEffect(() => {
-    setNotices(getNotices());
+    loadNotices();
   }, []);
 
-  const handlePublishNotice = (e: React.FormEvent) => {
+  const handlePublishNotice = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !message) {
-      alert("Please provide both a title and message.");
+      showAlert("Please provide both a title and message.", "Required");
       return;
     }
 
-    addNotice(title, message);
+    try {
+      await addNoticeApi({ title, message });
 
-    // Refresh notices
-    setNotices(getNotices());
+      // Refresh notices
+      await loadNotices();
 
-    // Reset
-    setTitle("");
-    setMessage("");
-    alert("Notice successfully published on Notice Board for all residents!");
+      // Reset
+      setTitle("");
+      setMessage("");
+      showAlert("Notice successfully published on Notice Board for all residents!", "Success");
+    } catch (error) {
+      console.error("Failed to publish notice", error);
+      showAlert("Failed to publish notice.", "Error");
+    }
   };
 
-  const handleDeleteNotice = (noticeId: string) => {
-    if (confirm("Are you sure you want to delete this notice?")) {
-      const stored = getNotices();
-      const filtered = stored.filter((n) => n.id !== noticeId);
-      if (typeof window !== "undefined") {
-        localStorage.setItem(STORAGE_KEYS.notices, JSON.stringify(filtered));
+  const handleDeleteNotice = async (noticeId: string) => {
+    if (await showConfirm("Are you sure you want to delete this notice?")) {
+      try {
+        await deleteNoticeApi(noticeId);
+        await loadNotices();
+      } catch (error) {
+        console.error("Failed to delete notice", error);
       }
-      setNotices(filtered);
     }
   };
 
@@ -173,9 +189,9 @@ export default function ReportsPage() {
         <div className="table-card">
           <span className="table-title">Published System Notices</span>
           <div style={{ marginTop: "20px" }}>
-            {notices.map((n) => (
+            {notices.map((n, i) => (
               <div
-                key={n.id}
+                key={n._id || n.id || i}
                 className="notice-card"
                 style={{
                   display: "flex",
@@ -188,16 +204,18 @@ export default function ReportsPage() {
                     <span className="notice-title">{n.title}</span>
                     <span className="notice-date">{n.date}</span>
                   </div>
-                  <p className="notice-body">{n.message}</p>
+                  <p className="notice-body" style={{ whiteSpace: "pre-wrap" }}>{n.message}</p>
                 </div>
                 <button
-                  onClick={() => handleDeleteNotice(n.id)}
-                  className="card-btn primary"
+                  onClick={() => handleDeleteNotice(n._id || n.id)}
                   style={{
                     background: "#ef4444",
+                    color: "white",
                     border: "none",
-                    width: "40px",
-                    height: "40px",
+                    width: "36px",
+                    height: "36px",
+                    minWidth: "36px",
+                    minHeight: "36px",
                     borderRadius: "50%",
                     display: "flex",
                     alignItems: "center",
@@ -205,6 +223,9 @@ export default function ReportsPage() {
                     flexShrink: 0,
                     padding: 0,
                     marginLeft: "20px",
+                    cursor: "pointer",
+                    fontSize: "20px",
+                    lineHeight: 1,
                   }}
                 >
                   ×
@@ -246,8 +267,8 @@ export default function ReportsPage() {
               </span>
             </div>
           ) : (
-            notices.map((n) => (
-              <div key={n.id} className="notice-card">
+            notices.map((n, i) => (
+              <div key={n._id || n.id || i} className="notice-card">
                 <div className="notice-header">
                   <span
                     className="notice-title"
@@ -279,7 +300,7 @@ export default function ReportsPage() {
       <div style={{ padding: "40px", textAlign: "center" }}>Loading...</div>
     );
 
-  if (user.role === "Admin") {
+  if (user.role === "Admin" || user.role === "Owner") {
     return renderAdminNoticeBoard();
   } else {
     return renderNoticesList();
