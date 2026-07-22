@@ -14,8 +14,8 @@ describe("Unit: PasswordUtil", () => {
   test("should hash a password and return a bcrypt string", async () => {
     hashedPassword = await PasswordUtil.hash(plainPassword);
     expect(hashedPassword).toBeDefined();
-    // Bcrypt hashes always start with $2b$
-    expect(hashedPassword.startsWith("$2b$")).toBe(true);
+    // Bcrypt hashes typically start with $2a$ or $2b$
+    expect(hashedPassword.startsWith("$2a$") || hashedPassword.startsWith("$2b$")).toBe(true);
     // Hash should NOT equal the original
     expect(hashedPassword).not.toBe(plainPassword);
   });

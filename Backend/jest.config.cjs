@@ -14,8 +14,7 @@ module.exports = {
           esModuleInterop: true,
           target: "ES2022",
           skipLibCheck: true,
-          allowSyntheticDefaultImports: true,
-          ignoreDeprecations: "6.0",
+          allowSyntheticDefaultImports: true
         },
       },
     ],
