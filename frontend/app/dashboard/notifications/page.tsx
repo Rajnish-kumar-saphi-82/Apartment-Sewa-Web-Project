@@ -65,6 +65,10 @@ export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Pagination
+  const [readPage, setReadPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
+
   const buildNotifications = useCallback(async () => {
     setLoading(true);
     const readIds = getReadIds();
@@ -339,8 +343,42 @@ export default function NotificationsPage() {
                 <div style={{ flex: 1, height: "1px", background: "#e2e8f0" }} />
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                {read.map(n => <NotifCard key={n.id} n={n} />)}
+                {read.slice((readPage - 1) * ITEMS_PER_PAGE, readPage * ITEMS_PER_PAGE).map(n => <NotifCard key={n.id} n={n} />)}
               </div>
+              
+              {/* Pagination */}
+              {read.length > ITEMS_PER_PAGE && (
+                <div className="pagination-wrapper" style={{ padding: "16px 24px", borderTop: "1px solid #e2e8f0", marginTop: "16px" }}>
+                  <span className="pagination-text">
+                    Page {readPage} of {Math.ceil(read.length / ITEMS_PER_PAGE)}
+                  </span>
+                  <div className="pagination-controls">
+                    <button
+                      className="pagination-btn"
+                      disabled={readPage <= 1}
+                      onClick={() => setReadPage(p => p - 1)}
+                    >
+                      Previous
+                    </button>
+                    {Array.from({ length: Math.ceil(read.length / ITEMS_PER_PAGE) }).map((_, i) => (
+                      <button
+                        key={i}
+                        className={`pagination-btn ${readPage === i + 1 ? "active" : ""}`}
+                        onClick={() => setReadPage(i + 1)}
+                      >
+                        {i + 1}
+                      </button>
+                    ))}
+                    <button
+                      className="pagination-btn"
+                      disabled={readPage >= Math.ceil(read.length / ITEMS_PER_PAGE)}
+                      onClick={() => setReadPage(p => p + 1)}
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
