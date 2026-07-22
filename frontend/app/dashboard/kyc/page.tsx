@@ -41,6 +41,10 @@ export default function KycPage() {
   const [reviewNote, setReviewNote] = useState("");
   const [viewModal, setViewModal] = useState<any | null>(null);
 
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
+
   const isAdmin = user?.role === "Admin";
   const isOwner = user?.role === "Owner";
   const isAdminOrOwner = isAdmin || isOwner;
@@ -366,52 +370,87 @@ export default function KycPage() {
               </div>
             </div>
           ) : (
-            records.map((r: any) => {
-              const s = STATUS_STYLES[r.status] || STATUS_STYLES.Pending;
-              return (
-                <div key={r._id || r.id} className="interactive-card" style={{ padding: "20px", display: "flex", alignItems: "center", gap: "16px" }}>
-                  <div style={{ width: "44px", height: "44px", borderRadius: "12px", background: "#f0f4ff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <ShieldCheck size={22} color="#1a56db" />
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 700, color: "var(--text-primary, #0f172a)", fontSize: "14px" }}>{r.documentType}</div>
-                    <div style={{ fontSize: "12px", color: "#64748b", marginTop: "2px" }}>
-                      Submitted: {new Date(r.submittedAt || r.created_at).toLocaleDateString()}
+            <>
+              {records.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE).map((r: any) => {
+                const s = STATUS_STYLES[r.status] || STATUS_STYLES.Pending;
+                return (
+                  <div key={r._id || r.id} className="interactive-card" style={{ padding: "20px", display: "flex", alignItems: "center", gap: "16px" }}>
+                    <div style={{ width: "44px", height: "44px", borderRadius: "12px", background: "#f0f4ff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <ShieldCheck size={22} color="#1a56db" />
                     </div>
-                    {isAdminOrOwner && (
-                      <div style={{ fontSize: "12px", color: "#94a3b8", marginTop: "2px" }}>User ID: {r.userId}</div>
-                    )}
-                    {r.reviewNote && (
-                      <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px", fontStyle: "italic" }}>Note: {r.reviewNote}</div>
-                    )}
-                  </div>
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "8px" }}>
-                    <span style={{ display: "flex", alignItems: "center", gap: "4px", padding: "4px 10px", borderRadius: "20px", background: s.bg, color: s.text, fontSize: "12px", fontWeight: 600 }}>
-                      {s.icon} {r.status}
-                    </span>
-                    <div style={{ display: "flex", gap: "6px" }}>
-                      <button onClick={() => setViewModal(r)}
-                        style={{ width: "30px", height: "30px", borderRadius: "8px", border: "1px solid #e2e8f0", background: "#f8fafc", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
-                        title="View Documents">
-                        <Eye size={14} color="#1a56db" />
-                      </button>
-                      {isAdminOrOwner && r.status === "Pending" && (
-                        <button onClick={() => { setReviewModal(r); setReviewNote(""); }}
-                          style={{ padding: "4px 10px", borderRadius: "8px", border: "none", background: "#1a56db", color: "white", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}>
-                          Review
-                        </button>
-                      )}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 700, color: "var(--text-primary, #0f172a)", fontSize: "14px" }}>{r.documentType}</div>
+                      <div style={{ fontSize: "12px", color: "#64748b", marginTop: "2px" }}>
+                        Submitted: {new Date(r.submittedAt || r.created_at).toLocaleDateString()}
+                      </div>
                       {isAdminOrOwner && (
-                        <button onClick={() => handleDelete(r._id || r.id)}
-                          style={{ width: "30px", height: "30px", borderRadius: "8px", border: "1px solid #fee2e2", background: "#fff5f5", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                          <Trash2 size={14} color="#ef4444" />
-                        </button>
+                        <div style={{ fontSize: "12px", color: "#94a3b8", marginTop: "2px" }}>User ID: {r.userId}</div>
+                      )}
+                      {r.reviewNote && (
+                        <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px", fontStyle: "italic" }}>Note: {r.reviewNote}</div>
                       )}
                     </div>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "8px" }}>
+                      <span style={{ display: "flex", alignItems: "center", gap: "4px", padding: "4px 10px", borderRadius: "20px", background: s.bg, color: s.text, fontSize: "12px", fontWeight: 600 }}>
+                        {s.icon} {r.status}
+                      </span>
+                      <div style={{ display: "flex", gap: "6px" }}>
+                        <button onClick={() => setViewModal(r)}
+                          style={{ width: "30px", height: "30px", borderRadius: "8px", border: "1px solid #e2e8f0", background: "#f8fafc", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                          title="View Documents">
+                          <Eye size={14} color="#1a56db" />
+                        </button>
+                        {isAdminOrOwner && r.status === "Pending" && (
+                          <button onClick={() => { setReviewModal(r); setReviewNote(""); }}
+                            style={{ padding: "4px 10px", borderRadius: "8px", border: "none", background: "#1a56db", color: "white", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}>
+                            Review
+                          </button>
+                        )}
+                        {isAdminOrOwner && (
+                          <button onClick={() => handleDelete(r._id || r.id)}
+                            style={{ width: "30px", height: "30px", borderRadius: "8px", border: "1px solid #fee2e2", background: "#fff5f5", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <Trash2 size={14} color="#ef4444" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+              {/* Pagination */}
+              {records.length > ITEMS_PER_PAGE && (
+                <div className="pagination-wrapper" style={{ padding: "16px 24px", borderTop: "1px solid #e2e8f0", marginTop: "16px", borderRadius: "12px", background: "#fff" }}>
+                  <span className="pagination-text">
+                    Page {currentPage} of {Math.ceil(records.length / ITEMS_PER_PAGE)}
+                  </span>
+                  <div className="pagination-controls">
+                    <button
+                      className="pagination-btn"
+                      disabled={currentPage <= 1}
+                      onClick={() => setCurrentPage(p => p - 1)}
+                    >
+                      Previous
+                    </button>
+                    {Array.from({ length: Math.ceil(records.length / ITEMS_PER_PAGE) }).map((_, i) => (
+                      <button
+                        key={i}
+                        className={`pagination-btn ${currentPage === i + 1 ? "active" : ""}`}
+                        onClick={() => setCurrentPage(i + 1)}
+                      >
+                        {i + 1}
+                      </button>
+                    ))}
+                    <button
+                      className="pagination-btn"
+                      disabled={currentPage >= Math.ceil(records.length / ITEMS_PER_PAGE)}
+                      onClick={() => setCurrentPage(p => p + 1)}
+                    >
+                      Next
+                    </button>
                   </div>
                 </div>
-              );
-            })
+              )}
+            </>
           )}
         </div>
       </div>
