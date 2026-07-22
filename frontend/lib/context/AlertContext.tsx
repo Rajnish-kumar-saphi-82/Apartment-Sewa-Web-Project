@@ -3,12 +3,13 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 
 interface AlertContextType {
-  showAlert: (message: string, title?: string) => Promise<void>;
+  showAlert: (message: string, title?: string, intent?: "info" | "success" | "error") => Promise<void>;
   showConfirm: (
     message: string,
     title?: string,
     confirmText?: string,
-    cancelText?: string
+    cancelText?: string,
+    intent?: "info" | "success" | "error"
   ) => Promise<boolean>;
 }
 
@@ -25,6 +26,7 @@ export const useAlert = () => {
 export const AlertProvider = ({ children }: { children: ReactNode }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [type, setType] = useState<"alert" | "confirm">("alert");
+  const [intent, setIntent] = useState<"info" | "success" | "error">("info");
   const [title, setTitle] = useState("Alert");
   const [message, setMessage] = useState("");
   const [confirmText, setConfirmText] = useState("Accept");
@@ -33,9 +35,19 @@ export const AlertProvider = ({ children }: { children: ReactNode }) => {
   
   const [resolvePromise, setResolvePromise] = useState<((value: boolean) => void) | null>(null);
 
-  const showAlert = (msg: string, titleStr: string = "Notice") => {
+  const showAlert = (msg: string, titleStr: string = "Notice", alertIntent: "info" | "success" | "error" = "info") => {
     return new Promise<void>((resolve) => {
       setType("alert");
+      
+      // Auto-infer intent from title if not explicitly provided
+      let finalIntent = alertIntent;
+      if (alertIntent === "info") {
+        const t = titleStr.toLowerCase();
+        if (t.includes("success")) finalIntent = "success";
+        else if (t.includes("error") || t.includes("failed")) finalIntent = "error";
+      }
+      
+      setIntent(finalIntent);
       setTitle(titleStr);
       setMessage(msg);
       setIsOpen(true);
@@ -47,10 +59,20 @@ export const AlertProvider = ({ children }: { children: ReactNode }) => {
     msg: string,
     titleStr: string = "Confirm",
     confirmBtnStr: string = "Accept",
-    cancelBtnStr: string = "Decline"
+    cancelBtnStr: string = "Decline",
+    confirmIntent: "info" | "success" | "error" = "info"
   ) => {
     return new Promise<boolean>((resolve) => {
       setType("confirm");
+      
+      let finalIntent = confirmIntent;
+      if (confirmIntent === "info") {
+        const t = titleStr.toLowerCase();
+        if (t.includes("success")) finalIntent = "success";
+        else if (t.includes("error") || t.includes("delete") || t.includes("remove")) finalIntent = "error";
+      }
+      
+      setIntent(finalIntent);
       setTitle(titleStr);
       setMessage(msg);
       setConfirmText(confirmBtnStr);
@@ -88,12 +110,12 @@ export const AlertProvider = ({ children }: { children: ReactNode }) => {
                   <button className="ios-modal-btn cancel" onClick={handleCancel}>
                     {cancelText}
                   </button>
-                  <button className="ios-modal-btn confirm" onClick={handleConfirm}>
+                  <button className={`ios-modal-btn confirm ${intent}`} onClick={handleConfirm}>
                     {confirmText}
                   </button>
                 </>
               ) : (
-                <button className="ios-modal-btn confirm full-width" onClick={handleConfirm}>
+                <button className={`ios-modal-btn confirm full-width ${intent}`} onClick={handleConfirm}>
                   OK
                 </button>
               )}
