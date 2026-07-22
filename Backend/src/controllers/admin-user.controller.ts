@@ -32,7 +32,7 @@ export class AdminUserController {
 
   async getUserById(req: Request, res: Response) {
     try {
-      const user = await adminUserService.getUserById(req.params.id);
+      const user = await adminUserService.getUserById(req.params.id as string);
       return ApiResponseHelper.success(res, user, "User fetched successfully");
     } catch (exception: unknown) {
       return this.handleError(res, exception);
@@ -76,7 +76,7 @@ export class AdminUserController {
       }
 
       const user = await adminUserService.updateUser(
-        req.params.id,
+        req.params.id as string,
         parsedData.data,
       );
       return ApiResponseHelper.success(res, user, "User updated successfully");
@@ -87,7 +87,7 @@ export class AdminUserController {
 
   async deleteUser(req: Request, res: Response) {
     try {
-      await adminUserService.deleteUser(req.params.id);
+      await adminUserService.deleteUser(req.params.id as string);
       return ApiResponseHelper.success(res, null, "User deleted successfully");
     } catch (exception: unknown) {
       return this.handleError(res, exception);
