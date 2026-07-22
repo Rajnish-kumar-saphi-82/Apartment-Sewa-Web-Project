@@ -33,15 +33,14 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // If old cookies are incomplete/corrupt, do not allow protected pages to
-  // trap the browser in a login <-> dashboard redirect loop.
-  if (token && !user && (isProtectedRoute || isAdminRoute)) {
-    return NextResponse.redirect(new URL("/login", request.url));
+  // 2. Authenticated user trying to access admin route without Admin role -> redirect to unauthorized
+  if (token && isAdminRoute && user?.role !== "Admin") {
+    return NextResponse.redirect(new URL("/unauthorized", request.url));
   }
 
-  // 2. Authenticated user trying to access admin route without Admin role -> redirect to unauthorized
-  if (token && user && isAdminRoute && user.role !== "Admin") {
-    return NextResponse.redirect(new URL("/unauthorized", request.url));
+  // 3. Authenticated user trying to visit login/register -> redirect to dashboard
+  if (token && isPublicRoute) {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   return NextResponse.next();

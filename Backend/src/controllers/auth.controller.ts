@@ -140,4 +140,21 @@ export class AuthController {
       return ApiResponseHelper.error(res, errorMessage, errorStatus);
     }
   }
+
+  async verifyEmail(req: Request, res: Response) {
+    try {
+      const { token } = req.query;
+      if (!token || typeof token !== "string") {
+        return ApiResponseHelper.error(res, "Verification token is required", 400);
+      }
+      
+      await authService.verifyEmail(token);
+      return ApiResponseHelper.success(res, null, "Email verified successfully");
+    } catch (exception: unknown) {
+      const errorMessage =
+        exception instanceof Error ? exception.message : "Unknown error";
+      const errorStatus = (exception as any)?.status || 500;
+      return ApiResponseHelper.error(res, errorMessage, errorStatus);
+    }
+  }
 }

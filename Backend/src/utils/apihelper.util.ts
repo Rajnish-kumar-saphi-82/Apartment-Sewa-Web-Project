@@ -28,4 +28,8 @@ export class ApiResponseHelper {
       errors: errors ?? null,
     });
   }
+
+  static validationError(res: Response, errors: any) {
+    return this.error(res, "Validation Error", 400, errors);
+  }
 }

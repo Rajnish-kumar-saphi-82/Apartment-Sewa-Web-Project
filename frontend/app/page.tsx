@@ -3,8 +3,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Building2, ArrowRight, Wrench, ShieldCheck, Home } from "lucide-react";
+import { ThemeToggle } from "@/app/components/ThemeToggle";
+import { useAuth } from "@/lib/context/AuthContext";
 
 export default function HomePage() {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<"owners" | "tenants">("owners");
 
   const ownerSteps = [
@@ -70,9 +73,16 @@ export default function HomePage() {
           <Link href="#features" className="landing-nav-link">
             Features
           </Link>
-          <Link href="/login" className="landing-login-btn">
-            Login
-          </Link>
+          <ThemeToggle />
+          {user ? (
+            <Link href="/dashboard" className="landing-login-btn">
+              Dashboard
+            </Link>
+          ) : (
+            <Link href="/login" className="landing-login-btn">
+              Login
+            </Link>
+          )}
         </nav>
       </header>
 
@@ -87,12 +97,20 @@ export default function HomePage() {
             billing, units, tenants, notices, maintenance, and account settings.
           </p>
           <div className="landing-hero-ctas">
-            <Link href="/register" className="hero-btn-primary">
-              Create Account <ArrowRight size={18} />
-            </Link>
-            <Link href="/login" className="hero-btn-secondary">
-              Open Dashboard
-            </Link>
+            {user ? (
+              <Link href="/dashboard" className="hero-btn-primary">
+                Open Dashboard <ArrowRight size={18} />
+              </Link>
+            ) : (
+              <>
+                <Link href="/register" className="hero-btn-primary">
+                  Create Account <ArrowRight size={18} />
+                </Link>
+                <Link href="/login" className="hero-btn-secondary">
+                  Login
+                </Link>
+              </>
+            )}
           </div>
         </div>
 
@@ -190,12 +208,20 @@ export default function HomePage() {
           system used across the dashboard.
         </p>
         <div className="cta-buttons">
-          <Link href="/register" className="cta-btn-white">
-            Register
-          </Link>
-          <Link href="/login" className="cta-btn-outline">
-            Login
-          </Link>
+          {user ? (
+            <Link href="/dashboard" className="cta-btn-white">
+              Open Dashboard
+            </Link>
+          ) : (
+            <>
+              <Link href="/register" className="cta-btn-white">
+                Register
+              </Link>
+              <Link href="/login" className="cta-btn-outline">
+                Login
+              </Link>
+            </>
+          )}
         </div>
       </section>
 

@@ -9,14 +9,15 @@ import {
   Users,
   CreditCard,
   Wrench,
-  BarChart3,
+  Megaphone,
   Settings,
-  HelpCircle,
   LogOut,
   Building2,
-  Plus,
   UserCircle,
   ShieldCheck,
+  PhoneCall,
+  ScanFace,
+  Bell,
 } from "lucide-react";
 import { useAuth } from "@/lib/context/AuthContext";
 
@@ -35,12 +36,19 @@ export default function Sidebar() {
     ...(user?.role === "Admin"
       ? [{ name: "Admin Users", href: "/admin/users", icon: ShieldCheck }]
       : []),
-    { name: "Properties", href: "/dashboard/properties", icon: Building },
-    { name: "Tenants", href: "/dashboard/tenants", icon: Users },
+    ...(user?.role !== "Tenant"
+      ? [
+          { name: "Properties", href: "/dashboard/properties", icon: Building },
+          { name: "Tenants", href: "/dashboard/tenants", icon: Users },
+        ]
+      : []),
     { name: "Billing", href: "/dashboard/billing", icon: CreditCard },
     { name: "Maintenance", href: "/dashboard/maintenance", icon: Wrench },
-    { name: "Reports", href: "/dashboard/reports", icon: BarChart3 },
-    { name: "Profile", href: "/dashboard/profile", icon: UserCircle },
+    ...(user?.role !== "Tenant"
+      ? [{ name: "Notices", href: "/dashboard/notices", icon: Megaphone }]
+      : []),
+    { name: "Notifications", href: "/dashboard/notifications", icon: Bell },
+    { name: "KYC Verification", href: "/dashboard/kyc", icon: ScanFace },
     { name: "Settings", href: "/dashboard/settings", icon: Settings },
   ];
 
@@ -53,16 +61,18 @@ export default function Sidebar() {
 
   return (
     <aside className="sidebar-container">
-      {/* Brand Header */}
-      <div className="sidebar-brand">
-        <div className="sidebar-logo-icon">
-          <Building2 size={24} />
+      {/* Brand Header — clicking goes to landing page */}
+      <Link href="/" style={{ textDecoration: "none" }}>
+        <div className="sidebar-brand" style={{ cursor: "pointer" }}>
+          <div className="sidebar-logo-icon">
+            <Building2 size={24} />
+          </div>
+          <div className="sidebar-brand-text">
+            <span className="sidebar-title">Apartment Sewa</span>
+            <span className="sidebar-subtitle">Management Suite</span>
+          </div>
         </div>
-        <div className="sidebar-brand-text">
-          <span className="sidebar-title">Apartment Sewa</span>
-          <span className="sidebar-subtitle">Management Suite</span>
-        </div>
-      </div>
+      </Link>
 
       <nav className="sidebar-nav">
         {navItems.map((item) => {
@@ -81,16 +91,7 @@ export default function Sidebar() {
       </nav>
 
       <div className="sidebar-footer">
-        <button className="sidebar-add-btn">
-          <Plus size={16} />
-          <span>Add New Property</span>
-        </button>
-
         <div className="sidebar-utilities">
-          <Link href="/dashboard/settings" className="sidebar-utility-link">
-            <HelpCircle size={18} />
-            <span>Support</span>
-          </Link>
           <button
             onClick={handleLogout}
             className="sidebar-utility-link logout-btn"
