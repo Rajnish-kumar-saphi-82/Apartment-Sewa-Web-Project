@@ -52,13 +52,24 @@ export const uploadProfileImage = multer({
   limits: { fileSize: MAX_FILE_SIZE },
 });
 
+<<<<<<< Updated upstream
+=======
+const dashboardUploadDir = path.join(process.cwd(), "uploads", "dashboard");
+if (!fs.existsSync(dashboardUploadDir)) {
+  fs.mkdirSync(dashboardUploadDir, { recursive: true });
+}
+>>>>>>> Stashed changes
 const dashboardStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, dashboardUploadDir);
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
+<<<<<<< Updated upstream
     const uniqueName = `dashboard-${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
+=======
+    const uniqueName = `dashboard-${Date.now()}${ext}`;
+>>>>>>> Stashed changes
     cb(null, uniqueName);
   },
 });

@@ -6,7 +6,10 @@ import { PORT } from "./configs/constant.js";
 import authRoutes from "./routes/auth.route.js";
 import adminUserRoutes from "./routes/admin-user.route.js";
 import dashboardRoutes from "./routes/dashboard.route.js";
+<<<<<<< Updated upstream
 import kycEmergencyRoutes from "./routes/kyc-emergency.route.js";
+=======
+>>>>>>> Stashed changes
 import { connectToMongoDB } from "./database/mongodb.js";
 import { ApiResponseHelper } from "./utils/apihelper.util.js";
 import passport from "./configs/passport.js";
@@ -40,7 +43,10 @@ app.use("/api/v1/auth", authRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/v1/admin/users", adminUserRoutes);
 app.use("/api/v1/dashboard", dashboardRoutes);
+<<<<<<< Updated upstream
 app.use("/api/v1", kycEmergencyRoutes);
+=======
+>>>>>>> Stashed changes
 
 app.get("/", (req: Request, res: Response) => {
   return res.json({
