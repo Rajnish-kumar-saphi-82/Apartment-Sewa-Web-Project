@@ -13,6 +13,7 @@ export const register = async (data: any) => {
 export const login = async (data: any) => {
   try {
     const response = await axiosInstance.post(API.AUTH.LOGIN, data);
+  
     return response.data;
   } catch (error: Error | any) {
     throw new Error(error?.response?.data?.message || "LOGIN failed");

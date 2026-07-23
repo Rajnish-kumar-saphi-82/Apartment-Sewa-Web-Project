@@ -3,10 +3,14 @@ import path from "path";
 import fs from "fs";
 
 const uploadDir = path.join(process.cwd(), "uploads", "profile-images");
+const dashboardUploadDir = path.join(process.cwd(), "uploads", "dashboard");
 
-// ensure the folder exists before multer tries to write into it
+
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
+}
+if (!fs.existsSync(dashboardUploadDir)) {
+  fs.mkdirSync(dashboardUploadDir, { recursive: true });
 }
 
 const ACCEPTED_MIME_TYPES = [
@@ -15,7 +19,7 @@ const ACCEPTED_MIME_TYPES = [
   "image/png",
   "image/webp",
 ];
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_FILE_SIZE = 5 * 1024 * 1024; 
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -44,6 +48,34 @@ const fileFilter = (
 
 export const uploadProfileImage = multer({
   storage,
+  fileFilter,
+  limits: { fileSize: MAX_FILE_SIZE },
+});
+
+<<<<<<< Updated upstream
+=======
+const dashboardUploadDir = path.join(process.cwd(), "uploads", "dashboard");
+if (!fs.existsSync(dashboardUploadDir)) {
+  fs.mkdirSync(dashboardUploadDir, { recursive: true });
+}
+>>>>>>> Stashed changes
+const dashboardStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, dashboardUploadDir);
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+<<<<<<< Updated upstream
+    const uniqueName = `dashboard-${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
+=======
+    const uniqueName = `dashboard-${Date.now()}${ext}`;
+>>>>>>> Stashed changes
+    cb(null, uniqueName);
+  },
+});
+
+export const uploadDashboardImage = multer({
+  storage: dashboardStorage,
   fileFilter,
   limits: { fileSize: MAX_FILE_SIZE },
 });

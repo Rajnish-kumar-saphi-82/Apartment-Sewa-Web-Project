@@ -5,6 +5,8 @@ import { PasswordUtil } from "../utils/hash.util.js";
 import { JWTUtil } from "../utils/jwt.util.js";
 import { z } from "zod";
 import type { UserWithoutPassword, LoginResponse } from "../types/auth.type.js";
+import { v4 as uuidv4 } from "uuid";
+import { mailerService } from "./mailer.service.js";
 
 export class AuthService {
   private userRepo = new UserRepository();
@@ -17,6 +19,8 @@ export class AuthService {
       throw new HttpException(400, "Email already registered");
     }
     const hashedPassword = await PasswordUtil.hash(data.password);
+    const verificationToken = uuidv4();
+    
     const newUser = {
       full_name: data.fullName,
       email: data.email,
@@ -24,11 +28,19 @@ export class AuthService {
       role: data.userType,
       country_code: data.countryCode,
       phone: data.phone,
+      verification_token: verificationToken,
       is_verified: false,
     };
+    
     const created = await this.userRepo.create(newUser);
+    
+    // Send verification email asynchronously
+    mailerService.sendVerificationEmail(data.email, verificationToken, data.fullName).catch((err) => {
+      console.error("Failed to send verification email:", err);
+    });
+    
     const userObject = created.toObject();
-    const { password, ...userWithoutPassword } = userObject;
+    const { password, verification_token, ...userWithoutPassword } = userObject as any;
     return userWithoutPassword;
   }
 
@@ -119,5 +131,20 @@ export class AuthService {
     }
     const hashedNew = await PasswordUtil.hash(data.newPassword);
     await this.userRepo.updateById(userId, { password: hashedNew } as any);
+  }
+
+  async verifyEmail(token: string): Promise<void> {
+    const user = await this.userRepo.findByQuery({ verification_token: token });
+    if (!user) {
+      throw new HttpException(400, "Invalid or expired verification token");
+    }
+    if (user.is_verified) {
+      throw new HttpException(400, "User is already verified");
+    }
+    
+    await this.userRepo.updateById(user._id as unknown as string, { 
+      is_verified: true,
+      verification_token: null 
+    } as any);
   }
 }

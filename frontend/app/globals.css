@@ -258,6 +258,17 @@ body {
   height: 100%;
   width: 100%;
 }
+
+/* Fix browser autofill yellow background */
+.form-input:-webkit-autofill,
+.form-input:-webkit-autofill:hover, 
+.form-input:-webkit-autofill:focus, 
+.form-input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px white inset !important;
+  -webkit-text-fill-color: #1f2937 !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
 .form-input::placeholder {
   color: #9ca3af;
   font-size: 14px;
@@ -315,6 +326,10 @@ body {
   appearance: none;
   -webkit-appearance: none;
   cursor: pointer;
+}
+.form-select option {
+  background-color: #ffffff;
+  color: #0f172a;
 }
 .form-select-arrow {
   position: absolute;
@@ -1474,6 +1489,15 @@ body {
   font-weight: 500;
 }
 
+.card-tenant-info {
+  font-size: 12px;
+  background: #f8fafc;
+  color: #0f172a;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #f1f5f9;
+}
+
 .card-footer-actions {
   display: flex;
   gap: 8px;
@@ -1661,7 +1685,7 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  height: 480px;
+  min-height: 480px;
 }
 
 .ticket-header-img {
@@ -2138,14 +2162,23 @@ body {
 
 .admin-form-input {
   width: 100%;
-  height: 44px;
+  padding: 12px 14px;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
-  padding: 0 12px;
   font-size: 14px;
   color: #0f172a;
-  background: #ffffff;
-  outline: none;
+  background-color: #ffffff;
+  transition: all 0.2s;
+}
+
+/* Fix browser autofill yellow background */
+.admin-form-input:-webkit-autofill,
+.admin-form-input:-webkit-autofill:hover, 
+.admin-form-input:-webkit-autofill:focus, 
+.admin-form-input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px white inset !important;
+  -webkit-text-fill-color: #0f172a !important;
+  transition: background-color 5000s ease-in-out 0s;
 }
 
 .admin-form-input:focus {
@@ -3292,3 +3325,828 @@ body {
   }
 }
 
+/* ============================================================
+   DARK MODE – Comprehensive coverage for entire project
+   ============================================================ */
+
+/* ── Base ── */
+.dark body,
+.dark html {
+  background-color: #0f172a;
+  color: #e2e8f0;
+}
+
+/* ── Dashboard Layout ── */
+.dark .dashboard-layout {
+  background-color: #0f172a;
+  color: #e2e8f0;
+}
+.dark .dashboard-content {
+  background-color: #0f172a;
+}
+.dark .dashboard-main-area {
+  background-color: #0f172a;
+}
+
+/* ── Sidebar ── */
+.dark .sidebar-container {
+  background-color: #1e293b;
+  border-right-color: #334155;
+}
+.dark .sidebar-title {
+  color: #f8fafc;
+}
+.dark .sidebar-subtitle {
+  color: #94a3b8;
+}
+.dark .sidebar-nav-item {
+  color: #94a3b8;
+}
+.dark .sidebar-nav-item:hover {
+  background-color: #334155;
+  color: #f8fafc;
+}
+.dark .sidebar-nav-item.active {
+  background-color: rgba(26, 86, 219, 0.2);
+  color: #60a5fa;
+  border-left-color: #60a5fa;
+}
+.dark .sidebar-footer {
+  border-top-color: #334155;
+}
+.dark .sidebar-utility-link {
+  color: #94a3b8;
+}
+.dark .sidebar-utility-link:hover {
+  background-color: #334155;
+  color: #f8fafc;
+}
+.dark .sidebar-utility-link.logout-btn {
+  color: #f87171;
+}
+.dark .sidebar-utility-link.logout-btn:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+/* ── Top Header ── */
+.dark .top-header {
+  background-color: #1e293b;
+  border-bottom-color: #334155;
+}
+.dark .header-username {
+  color: #f8fafc;
+}
+.dark .header-userrole {
+  color: #94a3b8;
+}
+.dark .header-kicker {
+  color: #94a3b8;
+}
+.dark .header-greeting {
+  color: #f8fafc;
+}
+.dark .header-icon-btn {
+  color: #94a3b8;
+}
+.dark .header-icon-btn:hover {
+  background-color: #334155;
+  color: #f8fafc;
+}
+.dark .header-separator {
+  background-color: #334155;
+}
+.dark .header-avatar-wrapper {
+  border-color: #334155;
+}
+.dark .header-avatar-fallback {
+  background-color: #334155;
+  color: #e2e8f0;
+}
+.dark .header-search-wrapper {
+  background-color: #0f172a;
+}
+.dark .header-search-input {
+  color: #e2e8f0;
+}
+
+/* ── All Cards ── */
+.dark .card,
+.dark .stat-card,
+.dark .chart-card,
+.dark .table-card,
+.dark .interactive-card,
+.dark .invoice-preview-card,
+.dark .maintenance-ticket-card,
+.dark .notice-card,
+.dark .flow-step-card,
+.dark .feature-box,
+.dark .profile-card,
+.dark .register-form-card,
+.dark .bill-item-row {
+  background-color: #1e293b;
+  border-color: #334155;
+  color: #e2e8f0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+.dark .notice-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* ── Stat Cards ── */
+.dark .stat-card-label {
+  color: #94a3b8;
+}
+.dark .stat-card-value {
+  color: #f8fafc;
+}
+.dark .stat-card-trend.up {
+  background-color: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+}
+.dark .stat-card-trend.down {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+/* ── Chart Cards ── */
+.dark .chart-title {
+  color: #f8fafc;
+}
+.dark .legend-item {
+  color: #94a3b8;
+}
+.dark .mock-chart-container {
+  border-bottom-color: #334155;
+}
+.dark .mock-chart-label {
+  color: #94a3b8;
+}
+.dark .donut-ring {
+  background: radial-gradient(circle, #1e293b 55%, transparent 56%),
+              conic-gradient(#60a5fa 0% 88.5%, #334155 88.5% 100%);
+}
+.dark .donut-ring.owner {
+  background: radial-gradient(circle, #1e293b 55%, transparent 56%),
+              conic-gradient(#34d399 0% 94.2%, #334155 94.2% 100%);
+}
+.dark .donut-percentage {
+  color: #f8fafc;
+}
+.dark .donut-label {
+  color: #94a3b8;
+}
+.dark .occ-legend-label {
+  color: #94a3b8;
+}
+.dark .occ-legend-val {
+  color: #f8fafc;
+}
+
+/* ── Page Header / Titles ── */
+.dark .page-title {
+  color: #f8fafc;
+}
+.dark .page-subtitle {
+  color: #94a3b8;
+}
+
+/* ── Custom Table ── */
+.dark .custom-table th {
+  border-bottom-color: #334155;
+  color: #94a3b8;
+}
+.dark .custom-table td {
+  border-bottom-color: #1e293b;
+  color: #cbd5e1;
+}
+.dark .custom-table tr:hover td {
+  background-color: #334155;
+}
+.dark .table-title {
+  color: #f8fafc;
+}
+
+/* ── Admin Tables ── */
+.dark .admin-table th {
+  background-color: #0f172a;
+  border-bottom-color: #334155;
+  color: #94a3b8;
+}
+.dark .admin-table td {
+  border-bottom-color: #334155;
+  color: #cbd5e1;
+}
+.dark .admin-table-row:hover td {
+  background-color: #334155;
+}
+.dark .admin-id-cell {
+  color: #94a3b8;
+}
+
+/* ── Entity Cells ── */
+.dark .entity-name {
+  color: #f8fafc;
+}
+.dark .entity-subtext {
+  color: #94a3b8;
+}
+.dark .entity-avatar {
+  border-color: #334155;
+}
+
+/* ── Form Elements ── */
+.dark .form-input-wrapper {
+  background-color: #0f172a;
+  border-color: #334155;
+}
+.dark .form-input-wrapper:hover {
+  border-color: #475569;
+}
+.dark .form-input-wrapper:focus-within {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.15);
+}
+.dark .form-select-wrapper {
+  background-color: #0f172a;
+  border-color: #334155;
+}
+.dark .form-select-wrapper:hover {
+  border-color: #475569;
+}
+.dark .form-select-wrapper:focus-within {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.15);
+}
+.dark .form-input {
+  color: #f8fafc;
+  background: transparent;
+}
+.dark .form-input::placeholder {
+  color: #475569;
+}
+.dark .form-select {
+  color: #f8fafc;
+}
+.dark .form-select option {
+  background-color: #1e293b;
+  color: #f8fafc;
+}
+.dark .form-label {
+  color: #cbd5e1;
+}
+.dark .form-helper-text {
+  color: #64748b;
+}
+.dark .form-input-icon {
+  color: #64748b;
+}
+
+/* ── Admin Form Inputs ── */
+.dark .admin-form-input {
+  background-color: #0f172a;
+  border-color: #334155;
+  color: #f8fafc;
+}
+.dark .admin-form-input:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.15);
+}
+.dark .admin-search-form {
+  background-color: #0f172a;
+  border-color: #334155;
+  color: #94a3b8;
+}
+.dark .admin-search-input {
+  background-color: transparent;
+  color: #f8fafc;
+}
+.dark .admin-muted-text {
+  color: #94a3b8;
+}
+.dark .admin-checkbox-row {
+  color: #cbd5e1;
+}
+.dark .admin-delete-text {
+  color: #94a3b8;
+}
+.dark .admin-empty-icon {
+  background-color: rgba(26, 86, 219, 0.15);
+}
+.dark .admin-state-box {
+  color: #94a3b8;
+}
+.dark .admin-state-box span {
+  color: #f8fafc;
+}
+.dark .admin-secondary-btn {
+  background-color: #334155;
+  color: #e2e8f0;
+  border-color: #475569;
+}
+.dark .admin-secondary-btn:hover:not(:disabled) {
+  background-color: #475569;
+}
+
+/* ── User Type Toggle (Register) ── */
+.dark .user-type-toggle {
+  border-color: #334155;
+}
+.dark .user-type-btn {
+  background: #1e293b;
+  color: #94a3b8;
+}
+.dark .user-type-btn:hover {
+  background: #334155;
+}
+.dark .user-type-btn.active {
+  background: #0f172a;
+  color: #60a5fa;
+  border-bottom-color: #60a5fa;
+}
+
+/* ── Tabs ── */
+.dark .tabs-header {
+  border-bottom-color: #334155;
+}
+.dark .tab-btn {
+  color: #94a3b8;
+}
+.dark .tab-btn:hover {
+  color: #f8fafc;
+}
+.dark .tab-btn.active {
+  color: #60a5fa;
+  border-bottom-color: #60a5fa;
+}
+
+/* ── Modals ── */
+.dark .modal-overlay {
+  background-color: rgba(0, 0, 0, 0.75);
+}
+.dark .modal-content,
+.dark .admin-user-modal {
+  background-color: #1e293b;
+  color: #e2e8f0;
+  border: 1px solid #334155;
+}
+.dark .modal-title {
+  color: #f8fafc;
+}
+.dark .modal-close-btn {
+  color: #64748b;
+}
+.dark .modal-close-btn:hover {
+  background-color: #334155;
+  color: #f8fafc;
+}
+
+/* ── Pagination ── */
+.dark .pagination-text {
+  color: #94a3b8;
+}
+.dark .pagination-btn {
+  background-color: #1e293b;
+  border-color: #334155;
+  color: #cbd5e1;
+}
+.dark .pagination-btn:hover:not(:disabled) {
+  background-color: #334155;
+}
+.dark .pagination-btn.active {
+  background-color: #1a56db;
+  border-color: #1a56db;
+  color: #ffffff;
+}
+
+/* ── Billing ── */
+.dark .bill-item-icon-wrapper {
+  background-color: #334155;
+  color: #94a3b8;
+}
+.dark .bill-item-title {
+  color: #f8fafc;
+}
+.dark .bill-item-desc {
+  color: #94a3b8;
+}
+.dark .bill-item-amount {
+  color: #f8fafc;
+}
+.dark .invoice-preview-header {
+  border-bottom-color: #334155;
+}
+.dark .invoice-preview-title {
+  color: #94a3b8;
+}
+.dark .invoice-preview-amount {
+  color: #60a5fa;
+}
+.dark .invoice-preview-details {
+  border-bottom-color: #334155;
+}
+.dark .inv-detail-row {
+  color: #94a3b8;
+}
+.dark .inv-detail-val {
+  color: #f8fafc;
+}
+
+/* ── Maintenance Tickets ── */
+.dark .maintenance-ticket-card {
+  background-color: #1e293b;
+  border-color: #334155;
+}
+.dark .ticket-title {
+  color: #f8fafc;
+}
+.dark .ticket-desc {
+  color: #94a3b8;
+}
+.dark .ticket-meta-row {
+  color: #64748b;
+}
+.dark .ticket-diagnostic-box {
+  background-color: rgba(26, 86, 219, 0.1);
+  border-color: rgba(96, 165, 250, 0.2);
+}
+.dark .diagnostic-text {
+  color: #94a3b8;
+}
+.dark .ticket-footer {
+  border-top-color: #334155;
+  background-color: #162032;
+}
+.dark .ticket-cost-label {
+  color: #64748b;
+}
+.dark .ticket-cost-val {
+  color: #f8fafc;
+}
+.dark .ticket-header-img {
+  background-color: #0f172a;
+}
+
+/* ── Notice Board ── */
+.dark .notice-card {
+  background-color: #1e293b;
+  border-color: #334155;
+}
+.dark .notice-title {
+  color: #f8fafc;
+}
+.dark .notice-date {
+  color: #64748b;
+}
+.dark .notice-body {
+  color: #94a3b8;
+}
+
+/* ── Properties / Interactive Cards ── */
+.dark .interactive-card {
+  background-color: #1e293b;
+  border-color: #334155;
+}
+.dark .card-title {
+  color: #f8fafc;
+}
+.dark .card-meta {
+  color: #94a3b8;
+}
+.dark .card-tenant-info {
+  background-color: #0f172a;
+  color: #e2e8f0;
+  border-color: #334155;
+}
+.dark .card-image-wrapper {
+  background-color: #0f172a;
+}
+.dark .card-btn.secondary {
+  color: #60a5fa;
+  border-color: #60a5fa;
+}
+.dark .card-btn.secondary:hover {
+  background-color: rgba(96, 165, 250, 0.1);
+}
+
+/* ── Login / Auth Pages ── */
+.dark .login-card {
+  background: rgba(30, 41, 59, 0.95);
+  border: 1px solid #334155;
+}
+.dark .login-title {
+  color: #60a5fa;
+}
+.dark .login-subtitle {
+  color: #94a3b8;
+}
+.dark .register-form-card {
+  background-color: #1e293b;
+  border: 1px solid #334155;
+}
+.dark .register-title {
+  color: #60a5fa;
+}
+.dark .register-subtitle {
+  color: #94a3b8;
+}
+.dark .register-left {
+  background-color: #0f172a;
+}
+.dark .auth-footer {
+  color: #94a3b8;
+}
+
+/* ── Profile Page ── */
+.dark .profile-background {
+  background-color: #0f172a;
+}
+.dark .profile-card {
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+.dark .profile-title {
+  color: #60a5fa;
+}
+
+/* ── Dashboard Profile Styles ── */
+.dark .profile-overview-banner {
+  /* Keep gradient – looks great in dark mode */
+}
+.dark .profile-section-title {
+  color: #f8fafc;
+}
+
+/* ── Landing Page ── */
+.dark .landing-container {
+  background-color: #0f172a;
+  color: #e2e8f0;
+}
+.dark .landing-hero {
+  background-color: #0f172a !important;
+  background:
+    linear-gradient(90deg, #0f172a 0%, rgba(15, 23, 42, 0.98) 50%, rgba(15, 23, 42, 0.85) 100%),
+    url("/assets/images/login-bg.png") !important;
+  background-size: cover !important;
+  background-position: center !important;
+}
+.dark .landing-navbar {
+  background-color: #1e293b;
+  border-bottom-color: #334155;
+}
+.dark .landing-logo-title {
+  color: #f8fafc;
+}
+.dark .landing-nav-link {
+  color: #94a3b8;
+}
+.dark .landing-nav-link:hover {
+  color: #60a5fa;
+}
+.dark .landing-hero-title {
+  color: #f8fafc;
+}
+.dark .landing-hero-desc {
+  color: #94a3b8;
+}
+.dark .landing-features-sec {
+  background-color: #0f172a;
+}
+.dark .feature-box {
+  background-color: #1e293b;
+  border-color: #334155;
+}
+.dark .feature-title {
+  color: #f8fafc;
+}
+.dark .feature-desc {
+  color: #94a3b8;
+}
+.dark .landing-flow-sec {
+  background-color: #1e293b;
+}
+.dark .flow-tab-btn {
+  background-color: #1e293b;
+  border-color: #334155;
+  color: #94a3b8;
+}
+.dark .flow-step-card {
+  background-color: #0f172a;
+  border-color: #334155;
+}
+.dark .flow-step-title {
+  color: #f8fafc;
+}
+.dark .flow-step-desc {
+  color: #94a3b8;
+}
+.dark .section-title {
+  color: #f8fafc;
+}
+.dark .section-desc {
+  color: #94a3b8;
+}
+.dark .trust-text {
+  color: #94a3b8;
+}
+.dark .landing-footer {
+  background-color: #1e293b;
+  border-top-color: #334155;
+}
+.dark .footer-links-title {
+  color: #f8fafc;
+}
+.dark .footer-link {
+  color: #94a3b8;
+}
+.dark .footer-link:hover {
+  color: #60a5fa;
+}
+.dark .footer-brand-desc {
+  color: #94a3b8;
+}
+.dark .footer-bottom {
+  border-top-color: #334155;
+}
+.dark .footer-copy {
+  color: #64748b;
+}
+.dark .footer-bottom-link {
+  color: #64748b;
+}
+.dark .footer-bottom-link:hover {
+  color: #60a5fa;
+}
+.dark .hero-btn-secondary {
+  color: #94a3b8;
+  border-color: #475569;
+}
+.dark .hero-btn-secondary:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* ── Admin Alert Boxes ── */
+.dark .admin-alert-success {
+  background-color: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.25);
+  color: #34d399;
+}
+.dark .admin-alert-error {
+  background-color: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.25);
+  color: #f87171;
+}
+
+/* ── Alert components ── */
+.dark .alert-success {
+  background-color: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.25);
+  color: #34d399;
+}
+.dark .alert-error {
+  background-color: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.25);
+  color: #f87171;
+}
+
+/* ── Reports Page ── */
+.dark .report-metric-card {
+  background-color: #1e293b;
+  border-color: #334155;
+}
+
+/* ── Settings Page ── */
+.dark .settings-section {
+  background-color: #1e293b;
+  border-color: #334155;
+}
+.dark .settings-label {
+  color: #cbd5e1;
+}
+
+/* ── Google OAuth Success Page ── */
+.dark .google-success-bg {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+/* ============================================
+   IOS STYLE ALERT / CONFIRM MODAL
+   ============================================ */
+.ios-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(2px);
+}
+
+.ios-modal {
+  width: 270px;
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+}
+
+.dark .ios-modal {
+  background-color: rgba(44, 44, 46, 0.95);
+  color: #fff;
+}
+
+.ios-modal-content {
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ios-modal-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: #000;
+  margin: 0;
+}
+
+.dark .ios-modal-title {
+  color: #fff;
+}
+
+.ios-modal-message {
+  font-size: 13px;
+  color: #3a3a3c;
+  line-height: 1.3;
+  margin: 0;
+}
+
+.dark .ios-modal-message {
+  color: #ebebf5;
+}
+
+.ios-modal-actions {
+  display: flex;
+  border-top: 1px solid rgba(60, 60, 67, 0.29);
+}
+
+.dark .ios-modal-actions {
+  border-top-color: rgba(84, 84, 88, 0.65);
+}
+
+.ios-modal-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  font-size: 17px;
+  padding: 12px;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.ios-modal-btn:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.dark .ios-modal-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.ios-modal-btn:not(:last-child) {
+  border-right: 1px solid rgba(60, 60, 67, 0.29);
+}
+
+.dark .ios-modal-btn:not(:last-child) {
+  border-right-color: rgba(84, 84, 88, 0.65);
+}
+
+.ios-modal-btn.cancel {
+  color: #ff3b30;
+  font-weight: 400;
+}
+
+.ios-modal-btn.confirm {
+  color: #1a56db;
+  font-weight: 600;
+}
+
+.ios-modal-btn.confirm.success {
+  color: #10b981;
+}
+
+.ios-modal-btn.confirm.error {
+  color: #ef4444;
+}
+
+.ios-modal-btn.success {
+  color: #10b981;
+}
+
+.ios-modal-btn.full-width {
+  flex: none;
+  width: 100%;
+}
