@@ -18,18 +18,21 @@ import {
   FileText,
 } from "lucide-react";
 import Link from "next/link";
-import {
-  getNotices,
-  getUnits,
-  getTenants,
-  getBills,
-  getTickets,
-  payBill,
-} from "@/lib/mockData";
+import { 
+  getUnits as fetchUnitsApi, 
+  getTenants as fetchTenantsApi, 
+  getBills as fetchBillsApi, 
+  getTickets as fetchTicketsApi, 
+  getNotices as fetchNoticesApi, 
+  payBill as payBillApi 
+} from "@/lib/api/dashboard";
 import { useAuth } from "@/lib/context/AuthContext";
+import { useAlert } from "@/lib/context/AlertContext";
+import DashboardCharts from "./_components/DashboardCharts";
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const { showAlert } = useAlert();
 
   // Dashboard states
   const [units, setUnits] = useState<any[]>([]);
@@ -42,12 +45,28 @@ export default function DashboardPage() {
   const [payModal, setPayModal] = useState(false);
   const [selectedBill, setSelectedBill] = useState<any>(null);
 
+  const loadData = async () => {
+    try {
+      const [unitsRes, tenantsRes, billsRes, ticketsRes, noticesRes] = await Promise.all([
+        fetchUnitsApi(),
+        fetchTenantsApi(),
+        fetchBillsApi(),
+        fetchTicketsApi(),
+        fetchNoticesApi()
+      ]);
+      const normalizeBills = (rawBills: any[]) => rawBills.map(b => ({ ...b, _id: b._id || b.id }));
+      setUnits(unitsRes.data.data || []);
+      setTenants(tenantsRes.data.data || []);
+      setBills(normalizeBills(billsRes.data.data || []));
+      setTickets(ticketsRes.data.data || []);
+      setNotices(noticesRes.data.data || []);
+    } catch (error) {
+      console.error("Failed to load dashboard data", error);
+    }
+  };
+
   useEffect(() => {
-    setUnits(getUnits());
-    setTenants(getTenants());
-    setBills(getBills());
-    setTickets(getTickets());
-    setNotices(getNotices());
+    loadData();
   }, []);
 
   // 1. ADMIN DASHBOARD VIEW
@@ -56,23 +75,7 @@ export default function DashboardPage() {
     const totalOwners = 0;
     const totalTenants = tenants.length;
     const paidBills = bills.filter((b) => b.status === "Paid");
-    const totalRevenue = paidBills.reduce(
-      (acc, curr) => acc + curr.totalCost,
-      0,
-    );
-    const occupiedCount = units.filter((u) => u.status === "Occupied").length;
-    const vacantCount = units.filter((u) => u.status === "Vacant").length;
-    const occupancyRate = units.length
-      ? ((occupiedCount / units.length) * 100).toFixed(1)
-      : "0";
-    const monthlyRevenue = paidBills.reduce<Record<string, number>>(
-      (acc, bill) => {
-        acc[bill.month] = (acc[bill.month] || 0) + bill.totalCost;
-        return acc;
-      },
-      {},
-    );
-    const maxRevenue = Math.max(...Object.values(monthlyRevenue), 0);
+    const pendingBills = bills.filter((b) => b.status === "Pending").length;
     const recentActivities = [
       ...bills.slice(0, 4).map((bill) => ({
         id: bill.id,
@@ -90,21 +93,14 @@ export default function DashboardPage() {
         amount: "",
         status: ticket.status,
       })),
-    ].slice(0, 4);
+    ].slice(0, 6);
 
     return (
       <div>
         <div className="page-header">
           <div className="page-title-area">
             <h1 className="page-title">Admin Dashboard</h1>
-            <p className="page-subtitle">
-              Overall system metrics and user activities
-            </p>
-          </div>
-          <div className="page-actions">
-            <button className="sidebar-add-btn" style={{ width: "auto" }}>
-              Export Report
-            </button>
+            <p className="page-subtitle">Overall system metrics and user activities</p>
           </div>
         </div>
 
@@ -112,13 +108,8 @@ export default function DashboardPage() {
         <div className="stat-grid">
           <div className="stat-card">
             <div className="stat-card-header">
-              <div className="stat-card-icon-wrapper blue">
-                <Building2 size={20} />
-              </div>
-              <span className="stat-card-trend up">
-                <TrendingUp size={12} />
-                Live
-              </span>
+              <div className="stat-card-icon-wrapper blue"><Building2 size={20} /></div>
+              <span className="stat-card-trend up"><TrendingUp size={12} /> Live</span>
             </div>
             <span className="stat-card-label">Total Apartments</span>
             <span className="stat-card-value">{totalApartments}</span>
@@ -126,13 +117,8 @@ export default function DashboardPage() {
 
           <div className="stat-card">
             <div className="stat-card-header">
-              <div className="stat-card-icon-wrapper green">
-                <Users size={20} />
-              </div>
-              <span className="stat-card-trend up">
-                <TrendingUp size={12} />
-                Live
-              </span>
+              <div className="stat-card-icon-wrapper green"><Users size={20} /></div>
+              <span className="stat-card-trend up"><TrendingUp size={12} /> Live</span>
             </div>
             <span className="stat-card-label">Total Owners</span>
             <span className="stat-card-value">{totalOwners}</span>
@@ -140,13 +126,8 @@ export default function DashboardPage() {
 
           <div className="stat-card">
             <div className="stat-card-header">
-              <div className="stat-card-icon-wrapper orange">
-                <Users size={20} />
-              </div>
-              <span className="stat-card-trend up">
-                <TrendingUp size={12} />
-                Live
-              </span>
+              <div className="stat-card-icon-wrapper orange"><Users size={20} /></div>
+              <span className="stat-card-trend up"><TrendingUp size={12} /> Live</span>
             </div>
             <span className="stat-card-label">Total Tenants</span>
             <span className="stat-card-value">{totalTenants}</span>
@@ -154,98 +135,15 @@ export default function DashboardPage() {
 
           <div className="stat-card">
             <div className="stat-card-header">
-              <div className="stat-card-icon-wrapper red">
-                <CreditCard size={20} />
-              </div>
-              <span className="stat-card-trend down">
-                <TrendingDown size={12} />
-                Live
-              </span>
+              <div className="stat-card-icon-wrapper red"><Wrench size={20} /></div>
+              <span className="stat-card-trend down"><TrendingDown size={12} /> Pending</span>
             </div>
-            <span className="stat-card-label">Total Revenue</span>
-            <span className="stat-card-value">
-              NPR {totalRevenue.toLocaleString()}
-            </span>
+            <span className="stat-card-label">Pending Bills</span>
+            <span className="stat-card-value">{pendingBills}</span>
           </div>
         </div>
 
-        {/* Charts Section */}
-        <div className="dashboard-grid-2">
-          {/* Revenue Chart */}
-          <div className="chart-card">
-            <div className="chart-header">
-              <span className="chart-title">Monthly Revenue</span>
-              <div className="chart-legend">
-                <div className="legend-item">
-                  <span className="legend-dot blue"></span>
-                  <span>Gross</span>
-                </div>
-                <div className="legend-item">
-                  <span className="legend-dot orange"></span>
-                  <span>Net</span>
-                </div>
-              </div>
-            </div>
-            <div className="mock-chart-container">
-              {Object.entries(monthlyRevenue).length === 0 ? (
-                <div
-                  style={{
-                    color: "#64748b",
-                    fontSize: "14px",
-                    padding: "40px 0",
-                  }}
-                >
-                  No revenue data yet.
-                </div>
-              ) : (
-                Object.entries(monthlyRevenue).map(([month, amount]) => (
-                  <div key={month} className="mock-chart-bar-col">
-                    <div
-                      className="mock-chart-bar"
-                      style={{
-                        height: `${maxRevenue ? Math.max((amount / maxRevenue) * 100, 8) : 0}%`,
-                      }}
-                    ></div>
-                    <span className="mock-chart-label">
-                      {month.slice(0, 3)}
-                    </span>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          {/* Occupancy Donut */}
-          <div className="chart-card">
-            <div className="chart-header">
-              <span className="chart-title">Occupancy Status</span>
-            </div>
-            <div className="donut-chart-wrapper">
-              <div className="donut-ring">
-                <div className="donut-center-text">
-                  <span className="donut-percentage">{occupancyRate}%</span>
-                  <span className="donut-label">Occupied</span>
-                </div>
-              </div>
-            </div>
-            <div className="occupancy-legend">
-              <div className="occ-legend-row">
-                <span className="occ-legend-label">
-                  <span className="legend-dot blue"></span> Rented
-                </span>
-                <span className="occ-legend-val">{occupiedCount}</span>
-              </div>
-              <div className="occ-legend-row">
-                <span className="occ-legend-label">
-                  <span className="legend-dot orange"></span> Vacant
-                </span>
-                <span className="occ-legend-val">{vacantCount}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Recent Activity Table */}
+        {/* Recent Activity Table — right after stat cards */}
         <div className="table-card">
           <div className="table-header-row">
             <span className="table-title">Recent System Activities</span>
@@ -263,32 +161,21 @@ export default function DashboardPage() {
               <tbody>
                 {recentActivities.length === 0 ? (
                   <tr>
-                    <td
-                      colSpan={4}
-                      style={{
-                        textAlign: "center",
-                        padding: "24px",
-                        color: "#64748b",
-                      }}
-                    >
+                    <td colSpan={4} style={{ textAlign: "center", padding: "24px", color: "#64748b" }}>
                       No recent activities yet.
                     </td>
                   </tr>
                 ) : (
-                  recentActivities.map((act) => (
-                    <tr key={act.id}>
-                      <td>
-                        <span style={{ fontWeight: 600 }}>{act.user}</span>
-                      </td>
+                  recentActivities.map((act, i) => (
+                    <tr key={act.id || i}>
+                      <td><span style={{ fontWeight: 600 }}>{act.user}</span></td>
                       <td>{act.action}</td>
                       <td>{act.date}</td>
                       <td>
                         {act.status === "Pending" ? (
                           <span className="status-badge failed">Pending</span>
                         ) : act.amount ? (
-                          <span style={{ fontWeight: 700, color: "#16a34a" }}>
-                            {act.amount}
-                          </span>
+                          <span style={{ fontWeight: 700, color: "#16a34a" }}>{act.amount}</span>
                         ) : (
                           <span className="status-badge success">Success</span>
                         )}
@@ -303,6 +190,7 @@ export default function DashboardPage() {
       </div>
     );
   };
+
 
   // 2. OWNER DASHBOARD VIEW
   const renderOwnerDashboard = () => {
@@ -328,11 +216,6 @@ export default function DashboardPage() {
             <p className="page-subtitle font-semibold text-blue-600">
               PORTFOLIO OVERVIEW
             </p>
-          </div>
-          <div className="page-actions">
-            <button className="sidebar-add-btn" style={{ width: "auto" }}>
-              Export Report
-            </button>
           </div>
         </div>
 
@@ -382,18 +265,16 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Chart + Quick Actions Grid */}
+        {/* Occupancy Rate + Quick Actions Grid */}
         <div className="dashboard-grid-2">
-          {/* Occupancy Rate */}
+          {/* Occupancy Rate Card */}
           <div className="chart-card">
             <div className="chart-header">
               <span className="chart-title">Occupancy Rate</span>
-              <span className="chart-title" style={{ color: "#10b981" }}>
-                Live occupancy
-              </span>
+              <span className="chart-title" style={{ color: "#10b981" }}>Live occupancy</span>
             </div>
-            <div style={{ display: "flex", gap: "24px", alignItems: "center" }}>
-              <div className="donut-chart-wrapper" style={{ flexGrow: 1 }}>
+            <div style={{ display: "flex", gap: "24px", alignItems: "center", padding: "16px 0" }}>
+              <div className="donut-chart-wrapper" style={{ flexShrink: 0 }}>
                 <div className="donut-ring owner">
                   <div className="donut-center-text">
                     <span className="donut-percentage">{occupancyRate}%</span>
@@ -401,136 +282,46 @@ export default function DashboardPage() {
                   </div>
                 </div>
               </div>
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "10px",
-                  width: "40%",
-                }}
-              >
-                <div style={{ fontSize: "14px", fontWeight: 500 }}>
-                  <div style={{ color: "#64748b" }}>Monthly Revenue</div>
-                  <div style={{ fontSize: "20px", fontWeight: 700 }}>
-                    NPR {ownerRevenue.toLocaleString()}
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                <div style={{ color: "#64748b", fontSize: "13px" }}>Monthly Revenue</div>
+                <div style={{ fontSize: "22px", fontWeight: 700, color: "#1e293b" }}>
+                  NPR {ownerRevenue.toLocaleString()}
+                </div>
+                <div style={{ marginTop: "12px", display: "flex", gap: "20px" }}>
+                  <div>
+                    <div style={{ color: "#64748b", fontSize: "12px" }}>Occupied</div>
+                    <div style={{ fontWeight: 700, color: "#10b981" }}>{occupiedCount} units</div>
+                  </div>
+                  <div>
+                    <div style={{ color: "#64748b", fontSize: "12px" }}>Vacant</div>
+                    <div style={{ fontWeight: 700, color: "#f59e0b" }}>{vacantCount} units</div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Quick Actions */}
+          {/* Quick Actions Card */}
           <div className="chart-card">
             <div className="chart-header">
               <span className="chart-title">Quick Actions</span>
             </div>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: "16px",
-                height: "80%",
-              }}
-            >
-              <Link
-                href="/dashboard/properties"
-                className="sidebar-nav-item active"
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  padding: "16px",
-                  border: "1px solid #e2e8f0",
-                  borderLeft: "none",
-                  borderRadius: "12px",
-                  height: "90px",
-                  color: "#1e293b",
-                  background: "#f8fafc",
-                }}
-              >
-                <Plus
-                  size={20}
-                  style={{ marginBottom: "6px", color: "#1a56db" }}
-                />
-                <span style={{ fontSize: "12px", fontWeight: 600 }}>
-                  Add Unit
-                </span>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginTop: "8px" }}>
+              <Link href="/dashboard/properties" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "16px", border: "1px solid #e2e8f0", borderRadius: "12px", height: "90px", color: "#1e293b", background: "#f8fafc", textDecoration: "none", transition: "all 0.2s" }} onMouseEnter={e => (e.currentTarget.style.background = "#eff6ff")} onMouseLeave={e => (e.currentTarget.style.background = "#f8fafc")}>
+                <Plus size={22} style={{ marginBottom: "6px", color: "#1a56db" }} />
+                <span style={{ fontSize: "12px", fontWeight: 600 }}>Add Unit</span>
               </Link>
-              <Link
-                href="/dashboard/tenants"
-                className="sidebar-nav-item active"
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  padding: "16px",
-                  border: "1px solid #e2e8f0",
-                  borderLeft: "none",
-                  borderRadius: "12px",
-                  height: "90px",
-                  color: "#1e293b",
-                  background: "#f8fafc",
-                }}
-              >
-                <Users
-                  size={20}
-                  style={{ marginBottom: "6px", color: "#10b981" }}
-                />
-                <span style={{ fontSize: "12px", fontWeight: 600 }}>
-                  New Lease
-                </span>
+              <Link href="/dashboard/tenants" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "16px", border: "1px solid #e2e8f0", borderRadius: "12px", height: "90px", color: "#1e293b", background: "#f8fafc", textDecoration: "none", transition: "all 0.2s" }} onMouseEnter={e => (e.currentTarget.style.background = "#f0fdf4")} onMouseLeave={e => (e.currentTarget.style.background = "#f8fafc")}>
+                <Users size={22} style={{ marginBottom: "6px", color: "#10b981" }} />
+                <span style={{ fontSize: "12px", fontWeight: 600 }}>New Lease</span>
               </Link>
-              <Link
-                href="/dashboard/billing"
-                className="sidebar-nav-item active"
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  padding: "16px",
-                  border: "1px solid #e2e8f0",
-                  borderLeft: "none",
-                  borderRadius: "12px",
-                  height: "90px",
-                  color: "#1e293b",
-                  background: "#f8fafc",
-                }}
-              >
-                <CreditCard
-                  size={20}
-                  style={{ marginBottom: "6px", color: "#f59e0b" }}
-                />
-                <span style={{ fontSize: "12px", fontWeight: 600 }}>
-                  Agreements
-                </span>
+              <Link href="/dashboard/billing" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "16px", border: "1px solid #e2e8f0", borderRadius: "12px", height: "90px", color: "#1e293b", background: "#f8fafc", textDecoration: "none", transition: "all 0.2s" }} onMouseEnter={e => (e.currentTarget.style.background = "#fffbeb")} onMouseLeave={e => (e.currentTarget.style.background = "#f8fafc")}>
+                <CreditCard size={22} style={{ marginBottom: "6px", color: "#f59e0b" }} />
+                <span style={{ fontSize: "12px", fontWeight: 600 }}>Agreements</span>
               </Link>
-              <Link
-                href="/dashboard/reports"
-                className="sidebar-nav-item active"
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  padding: "16px",
-                  border: "1px solid #e2e8f0",
-                  borderLeft: "none",
-                  borderRadius: "12px",
-                  height: "90px",
-                  color: "#1e293b",
-                  background: "#f8fafc",
-                }}
-              >
-                <MessageSquare
-                  size={20}
-                  style={{ marginBottom: "6px", color: "#ef4444" }}
-                />
-                <span style={{ fontSize: "12px", fontWeight: 600 }}>
-                  Broadcast
-                </span>
+              <Link href="/dashboard/notices" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "16px", border: "1px solid #e2e8f0", borderRadius: "12px", height: "90px", color: "#1e293b", background: "#f8fafc", textDecoration: "none", transition: "all 0.2s" }} onMouseEnter={e => (e.currentTarget.style.background = "#fff1f2")} onMouseLeave={e => (e.currentTarget.style.background = "#f8fafc")}>
+                <MessageSquare size={22} style={{ marginBottom: "6px", color: "#ef4444" }} />
+                <span style={{ fontSize: "12px", fontWeight: 600 }}>Broadcast</span>
               </Link>
             </div>
           </div>
@@ -543,6 +334,7 @@ export default function DashboardPage() {
       </div>
     );
   };
+
 
   // 3. TENANT DASHBOARD VIEW
   const renderTenantDashboard = () => {
@@ -563,12 +355,21 @@ export default function DashboardPage() {
       setPayModal(true);
     };
 
-    const handleConfirmPayment = () => {
-      if (selectedBill) {
-        payBill(selectedBill.id);
-        setBills(getBills());
+    const handleConfirmPayment = async () => {
+      if (!selectedBill) return;
+      const billId = selectedBill._id || selectedBill.id;
+      if (!billId || billId === "undefined") {
+        showAlert("Could not find a valid bill ID. Please refresh and try again.", "Error");
+        return;
+      }
+      try {
+        await payBillApi(billId, "Khalti");
+        await loadData();
         setPayModal(false);
-        alert("Payment Successful via simulated Khalti SDK!");
+        showAlert("Payment Successful via Khalti SDK!", "Success");
+      } catch (error) {
+        console.error("Payment failed", error);
+        showAlert("Payment Failed.", "Error");
       }
     };
 
@@ -627,7 +428,7 @@ export default function DashboardPage() {
     tickets
       .filter((t) => t.flatNo === tenantFlat)
       .forEach((t) => {
-        let desc = `Work order #${t.id} (${t.description.substring(0, 35)}...) is ${t.status}.`;
+        const desc = `Work order #${t.id} (${t.description.substring(0, 35)}...) is ${t.status}.`;
         tenantActivities.push({
           id: t.id,
           type: "maintenance",
@@ -860,31 +661,7 @@ export default function DashboardPage() {
                   Repair
                 </span>
               </Link>
-              <Link
-                href="/dashboard/reports"
-                className="sidebar-nav-item active"
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  padding: "16px",
-                  border: "1px solid #e2e8f0",
-                  borderLeft: "none",
-                  borderRadius: "12px",
-                  minHeight: "92px",
-                  color: "#1e293b",
-                  background: "#f8fafc",
-                }}
-              >
-                <FileText
-                  size={20}
-                  style={{ marginBottom: "6px", color: "#f59e0b" }}
-                />
-                <span style={{ fontSize: "12px", fontWeight: 600 }}>
-                  Notices
-                </span>
-              </Link>
+
               <Link
                 href="/dashboard/settings"
                 className="sidebar-nav-item active"
@@ -914,151 +691,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="dashboard-grid-2">
-          <div className="table-card">
-            <div className="table-header-row">
-              <span className="table-title">Recent Activity</span>
-            </div>
-            <div
-              style={{ display: "flex", flexDirection: "column", gap: "16px" }}
-            >
-              {sortedActivities.length > 0 ? (
-                sortedActivities.map((act) => (
-                  <div
-                    key={act.id}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      gap: "16px",
-                      borderBottom: "1px solid #f1f5f9",
-                      paddingBottom: "12px",
-                      flexWrap: "wrap",
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: "12px",
-                        alignItems: "center",
-                        minWidth: 0,
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: "40px",
-                          height: "40px",
-                          borderRadius: "12px",
-                          background:
-                            act.icon === "payment"
-                              ? "#ecfdf5"
-                              : act.icon === "maintenance"
-                                ? "#eff6ff"
-                                : "#fffbeb",
-                          color:
-                            act.icon === "payment"
-                              ? "#10b981"
-                              : act.icon === "maintenance"
-                                ? "#3b82f6"
-                                : "#d97706",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          flexShrink: 0,
-                        }}
-                      >
-                        {act.icon === "payment" && <CreditCard size={18} />}
-                        {act.icon === "maintenance" && <Wrench size={18} />}
-                        {act.icon !== "payment" &&
-                          act.icon !== "maintenance" && (
-                            <AlertTriangle size={18} />
-                          )}
-                      </div>
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ fontWeight: 600, fontSize: "14px" }}>
-                          {act.title}
-                        </div>
-                        <div
-                          style={{
-                            fontSize: "12px",
-                            color: "#64748b",
-                            lineHeight: 1.5,
-                          }}
-                        >
-                          {act.desc}
-                        </div>
-                      </div>
-                    </div>
-                    <span style={{ fontSize: "12px", color: "#64748b" }}>
-                      {act.date}
-                    </span>
-                  </div>
-                ))
-              ) : (
-                <div
-                  style={{
-                    textAlign: "center",
-                    color: "#64748b",
-                    padding: "20px 0",
-                  }}
-                >
-                  No recent activities.
-                </div>
-              )}
-            </div>
-          </div>
 
-          <div className="chart-card">
-            <div className="chart-header">
-              <span className="chart-title">Residence Details</span>
-            </div>
-            {myUnit ? (
-              <div>
-                <div
-                  className="card-image-wrapper"
-                  style={{ borderRadius: "8px", marginBottom: "16px" }}
-                >
-                  <img
-                    src={myUnit.image}
-                    className="card-image"
-                    alt="building"
-                  />
-                  <span className="card-badge">Current Residence</span>
-                </div>
-                <span className="card-title">Flat {myUnit.flatNo}</span>
-                <span className="card-meta">{myUnit.floor}</span>
-                <div
-                  style={{
-                    display: "grid",
-                    gap: "10px",
-                    borderTop: "1px solid #e2e8f0",
-                    paddingTop: "14px",
-                    marginTop: "14px",
-                    fontSize: "13px",
-                    color: "#64748b",
-                  }}
-                >
-                  <span>
-                    Flat No: <b style={{ color: "#0f172a" }}>{myUnit.flatNo}</b>
-                  </span>
-                  <span>
-                    Monthly Rent:{" "}
-                    <b style={{ color: "#0f172a" }}>
-                      NPR {myUnit.rent.toLocaleString()}
-                    </b>
-                  </span>
-                </div>
-              </div>
-            ) : (
-              <div style={{ color: "#64748b", lineHeight: 1.6 }}>
-                <span className="card-title">No residence assigned</span>
-                <p style={{ marginTop: "8px" }}>
-                  Your owner has not assigned a unit yet.
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
 
         {/* Khalti Payment Modal */}
         {payModal && selectedBill && (

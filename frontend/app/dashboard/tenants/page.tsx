@@ -11,18 +11,22 @@ import {
   Phone,
   Check,
 } from "lucide-react";
-import { getTenants, addTenant, getUnits, Tenant, Unit } from "@/lib/mockData";
+import { getTenants as fetchTenantsApi, createTenant as addTenantApi, getUnits as fetchUnitsApi } from "@/lib/api/dashboard";
 import { useAuth } from "@/lib/context/AuthContext";
+import { useAlert } from "@/lib/context/AlertContext";
 
 export default function TenantsPage() {
   const { user } = useAuth();
+  const { showAlert } = useAlert();
 
   // States
-  const [tenants, setTenants] = useState<Tenant[]>([]);
-  const [units, setUnits] = useState<Unit[]>([]);
+  const [tenants, setTenants] = useState<any[]>([]);
+  const [units, setUnits] = useState<any[]>([]);
 
-  // Search
+  // Search & Pagination
   const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
 
   // Modal
   const [showAddTenantModal, setShowAddTenantModal] = useState(false);
@@ -32,29 +36,45 @@ export default function TenantsPage() {
     flatNo: "",
   });
 
+  const loadData = async () => {
+    try {
+      const [tenantsRes, unitsRes] = await Promise.all([
+        fetchTenantsApi(),
+        fetchUnitsApi()
+      ]);
+      setTenants(tenantsRes.data.data || []);
+      setUnits(unitsRes.data.data || []);
+    } catch (error) {
+      console.error("Failed to load data", error);
+    }
+  };
+
   useEffect(() => {
-    setTenants(getTenants());
-    setUnits(getUnits());
+    loadData();
   }, []);
 
-  const handleAddTenantSubmit = (e: React.FormEvent) => {
+  const handleAddTenantSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const { name, phone, flatNo } = newTenantData;
     if (!name || !phone || !flatNo) {
-      alert("Please fill in all details.");
+      showAlert("Please fill in all details.", "Required");
       return;
     }
 
-    addTenant(name, phone, flatNo);
-
-    // Refresh states
-    setTenants(getTenants());
-    setUnits(getUnits());
-
-    // Reset and Close
-    setShowAddTenantModal(false);
-    setNewTenantData({ name: "", phone: "", flatNo: "" });
-    alert("Tenant added successfully and unique House Code generated!");
+    try {
+      await addTenantApi({ name, phone, flatNo });
+      
+      // Refresh states
+      await loadData();
+      
+      // Reset and Close
+      setShowAddTenantModal(false);
+      setNewTenantData({ name: "", phone: "", flatNo: "" });
+      showAlert("Tenant added successfully and unique House Code generated!", "Success");
+    } catch (error) {
+      console.error("Failed to add tenant", error);
+      showAlert("Failed to add tenant.", "Error");
+    }
   };
 
   const getVacantUnits = () => {
@@ -139,10 +159,10 @@ export default function TenantsPage() {
                     </td>
                   </tr>
                 ) : (
-                  filteredTenants.map((t) => (
-                    <tr key={t.id}>
+                  filteredTenants.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE).map((t, i) => (
+                    <tr key={t._id || t.id || i}>
                       <td>
-                        <div style={{ fontWeight: 600, color: "#0f172a" }}>
+                        <div className="entity-name" style={{ fontWeight: 600 }}>
                           {t.name}
                         </div>
                       </td>
@@ -166,6 +186,40 @@ export default function TenantsPage() {
               </tbody>
             </table>
           </div>
+          
+          {/* Pagination */}
+          {filteredTenants.length > ITEMS_PER_PAGE && (
+            <div className="pagination-wrapper" style={{ padding: "16px 24px", borderTop: "1px solid #e2e8f0" }}>
+              <span className="pagination-text">
+                Page {currentPage} of {Math.ceil(filteredTenants.length / ITEMS_PER_PAGE)}
+              </span>
+              <div className="pagination-controls">
+                <button
+                  className="pagination-btn"
+                  disabled={currentPage <= 1}
+                  onClick={() => setCurrentPage(p => p - 1)}
+                >
+                  Previous
+                </button>
+                {Array.from({ length: Math.ceil(filteredTenants.length / ITEMS_PER_PAGE) }).map((_, i) => (
+                  <button
+                    key={i}
+                    className={`pagination-btn ${currentPage === i + 1 ? "active" : ""}`}
+                    onClick={() => setCurrentPage(i + 1)}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+                <button
+                  className="pagination-btn"
+                  disabled={currentPage >= Math.ceil(filteredTenants.length / ITEMS_PER_PAGE)}
+                  onClick={() => setCurrentPage(p => p + 1)}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Add Tenant Modal */}
@@ -242,8 +296,8 @@ export default function TenantsPage() {
                       required
                     >
                       <option value="">-- Choose Flat --</option>
-                      {vacantFlats.map((vf) => (
-                        <option key={vf.id} value={vf.flatNo}>
+                      {vacantFlats.map((vf, i) => (
+                        <option key={vf._id || vf.id || i} value={vf.flatNo}>
                           Flat {vf.flatNo} ({vf.floor}) - NPR{" "}
                           {vf.rent.toLocaleString()}
                         </option>
@@ -337,10 +391,10 @@ export default function TenantsPage() {
                     </td>
                   </tr>
                 ) : (
-                  filteredTenants.map((t) => (
-                    <tr key={t.id}>
+                  filteredTenants.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE).map((t, i) => (
+                    <tr key={t._id || t.id || i}>
                       <td>
-                        <div style={{ fontWeight: 600, color: "#0f172a" }}>
+                        <div className="entity-name" style={{ fontWeight: 600 }}>
                           {t.name}
                         </div>
                       </td>
@@ -358,6 +412,40 @@ export default function TenantsPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination */}
+          {filteredTenants.length > ITEMS_PER_PAGE && (
+            <div className="pagination-wrapper" style={{ padding: "16px 24px", borderTop: "1px solid #e2e8f0" }}>
+              <span className="pagination-text">
+                Page {currentPage} of {Math.ceil(filteredTenants.length / ITEMS_PER_PAGE)}
+              </span>
+              <div className="pagination-controls">
+                <button
+                  className="pagination-btn"
+                  disabled={currentPage <= 1}
+                  onClick={() => setCurrentPage(p => p - 1)}
+                >
+                  Previous
+                </button>
+                {Array.from({ length: Math.ceil(filteredTenants.length / ITEMS_PER_PAGE) }).map((_, i) => (
+                  <button
+                    key={i}
+                    className={`pagination-btn ${currentPage === i + 1 ? "active" : ""}`}
+                    onClick={() => setCurrentPage(i + 1)}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+                <button
+                  className="pagination-btn"
+                  disabled={currentPage >= Math.ceil(filteredTenants.length / ITEMS_PER_PAGE)}
+                  onClick={() => setCurrentPage(p => p + 1)}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );

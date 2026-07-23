@@ -3,7 +3,13 @@ import { DashboardService } from "../services/dashboard.service.js";
 import { ApiResponseHelper } from "../utils/apihelper.util.js";
 import { UserModel } from "../models/auth.model.js";
 import { analyzeMaintenanceImage } from "../services/gemini.service.js";
-import { CreateNoticeDTO, CreateUnitDTO, UpdateUnitStatusDTO, CreateTenantDTO, CreateBillDTO, PayBillDTO, CreateTicketDTO, UpdateTicketStatusDTO } from "../dtos/dashboard.dto.js";
+import { BillModel } from "../models/bill.model.js";
+import { UnitModel } from "../models/unit.model.js";
+import { 
+  CreateNoticeDTO, CreateUnitDTO, UpdateUnitStatusDTO, 
+  CreateTenantDTO, CreateBillDTO, PayBillDTO, 
+  CreateTicketDTO, UpdateTicketStatusDTO 
+} from "../dtos/dashboard.dto.js";
 
 const dashboardService = new DashboardService();
 

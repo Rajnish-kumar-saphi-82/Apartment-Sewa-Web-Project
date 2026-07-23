@@ -19,7 +19,7 @@ export const registerSchema = z
     phone: z
       .string()
       .min(1, "Phone number is required")
-      .regex(/^\d{6,15}$/, "Phone number must contain 6–15 digits"),
+      .regex(/^\d{10}$/, "Phone number must contain exactly 10 digits"),
     password: z
       .string()
       .min(1, "Password is required")
