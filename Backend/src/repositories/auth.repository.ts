@@ -26,6 +26,14 @@ export class UserRepository {
     return await UserModel.findByIdAndDelete(id);
   }
 
+<<<<<<< Updated upstream
+  async findByQuery(query: Record<string, unknown>): Promise<IUser | null> {
+=======
+  async findByQuery(query: Record<string, any>): Promise<IUser | null> {
+>>>>>>> Stashed changes
+    return await UserModel.findOne(query);
+  }
+
   async findAllPaginated(
     page: number,
     limit: number,

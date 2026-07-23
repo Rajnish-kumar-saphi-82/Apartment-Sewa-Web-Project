@@ -9,7 +9,9 @@ export interface IUser extends Document {
   country_code: string;
   phone: string;
   profile_image: string | null;
+  verification_token: string | null;
   is_verified: boolean;
+  kyc_status: "not_submitted" | "pending" | "approved" | "rejected";
   created_at: Date;
 }
 
@@ -26,7 +28,13 @@ const UserSchema = new Schema<IUser>(
     country_code: { type: String, required: true },
     phone: { type: String, required: true },
     profile_image: { type: String, default: null },
+    verification_token: { type: String, default: null },
     is_verified: { type: Boolean, default: false },
+    kyc_status: {
+      type: String,
+      enum: ["not_submitted", "pending", "approved", "rejected"],
+      default: "not_submitted",
+    },
   },
   {
     timestamps: { createdAt: "created_at", updatedAt: "updated_at" },

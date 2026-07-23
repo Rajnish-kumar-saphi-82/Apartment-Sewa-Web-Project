@@ -10,4 +10,13 @@ export const API = {
   ADMIN: {
     USERS: "/api/v1/admin/users",
   },
+  DASHBOARD: {
+    NOTICES: "/api/v1/dashboard/notices",
+    UNITS: "/api/v1/dashboard/units",
+    TENANTS: "/api/v1/dashboard/tenants",
+    BILLS: "/api/v1/dashboard/bills",
+    TICKETS: "/api/v1/dashboard/tickets",
+  },
+  KYC: "/api/v1/kyc",
+  EMERGENCY: "/api/v1/emergency",
 };

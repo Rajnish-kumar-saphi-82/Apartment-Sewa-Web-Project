@@ -5,8 +5,11 @@ import path from "path";
 import { PORT } from "./configs/constant.js";
 import authRoutes from "./routes/auth.route.js";
 import adminUserRoutes from "./routes/admin-user.route.js";
+import dashboardRoutes from "./routes/dashboard.route.js";
+import kycEmergencyRoutes from "./routes/kyc-emergency.route.js";
 import { connectToMongoDB } from "./database/mongodb.js";
 import { ApiResponseHelper } from "./utils/apihelper.util.js";
+import passport from "./configs/passport.js";
 
 dotenv.config();
 
@@ -22,17 +25,22 @@ const corsOptions = {
   optionsSuccessStatus: 200,
 };
 
-app.use(cors(corsOptions)); // removed the duplicate second call that was here
+app.use(cors(corsOptions)); 
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(passport.initialize());
 
-// serve uploaded profile images statically, e.g. GET /uploads/profile-images/<file>
+
+
+
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/v1/admin/users", adminUserRoutes);
+app.use("/api/v1/dashboard", dashboardRoutes);
+app.use("/api/v1", kycEmergencyRoutes);
 
 app.get("/", (req: Request, res: Response) => {
   return res.json({
@@ -42,6 +50,7 @@ app.get("/", (req: Request, res: Response) => {
     endpoints: {
       auth: "/api/v1/auth",
       adminUsers: "/api/v1/admin/users",
+      dashboard: "/api/v1/dashboard",
     },
   });
 });
@@ -75,6 +84,8 @@ const startServer = async () => {
   }
 };
 
-startServer();
+if (process.env.NODE_ENV !== "test") {
+  startServer();
+}
 
 export default app;
