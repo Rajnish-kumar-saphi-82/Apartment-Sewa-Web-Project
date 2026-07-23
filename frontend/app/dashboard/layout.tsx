@@ -14,7 +14,9 @@ export default function DashboardLayout({
 
         <div className="dashboard-main-area">
           <TopHeader />
-          <main className="dashboard-content">{children}</main>
+          <main className="dashboard-content">
+            {children}
+          </main>
         </div>
       </div>
     </ProtectedRoute>

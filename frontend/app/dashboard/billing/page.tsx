@@ -34,6 +34,12 @@ export default function BillingPage() {
     year: "numeric",
   });
   const [genMonth, setGenMonth] = useState(currentMonth);
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    return `${y}-${m}`;
+  });
   const [prevReading, setPrevReading] = useState<number | "">("");
   const [currReading, setCurrReading] = useState("");
   const [waterCost, setWaterCost] = useState("");
@@ -42,6 +48,11 @@ export default function BillingPage() {
   // Admin filters
   const [statusFilter, setStatusFilter] = useState("all");
   const [monthFilter, setMonthFilter] = useState("all");
+
+  // Pagination
+  const [adminPage, setAdminPage] = useState(1);
+  const [tenantPage, setTenantPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
 
   // Payment preview modal
   const [selectedBill, setSelectedBill] = useState<any | null>(null);
@@ -237,7 +248,7 @@ export default function BillingPage() {
                     </td>
                   </tr>
                 ) : (
-                  filteredBills.map((b) => (
+                  filteredBills.slice((adminPage - 1) * ITEMS_PER_PAGE, adminPage * ITEMS_PER_PAGE).map((b) => (
                     <tr
                       key={b._id || b.id || Math.random()}
                       className={b.status === "Pending" ? "unpaid-row" : ""}
@@ -267,6 +278,40 @@ export default function BillingPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination */}
+          {filteredBills.length > ITEMS_PER_PAGE && (
+            <div className="pagination-wrapper" style={{ padding: "16px 24px", borderTop: "1px solid #e2e8f0" }}>
+              <span className="pagination-text">
+                Page {adminPage} of {Math.ceil(filteredBills.length / ITEMS_PER_PAGE)}
+              </span>
+              <div className="pagination-controls">
+                <button
+                  className="pagination-btn"
+                  disabled={adminPage <= 1}
+                  onClick={() => setAdminPage(p => p - 1)}
+                >
+                  Previous
+                </button>
+                {Array.from({ length: Math.ceil(filteredBills.length / ITEMS_PER_PAGE) }).map((_, i) => (
+                  <button
+                    key={i}
+                    className={`pagination-btn ${adminPage === i + 1 ? "active" : ""}`}
+                    onClick={() => setAdminPage(i + 1)}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+                <button
+                  className="pagination-btn"
+                  disabled={adminPage >= Math.ceil(filteredBills.length / ITEMS_PER_PAGE)}
+                  onClick={() => setAdminPage(p => p + 1)}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -336,11 +381,22 @@ export default function BillingPage() {
                   <label className="form-label">Billing Month</label>
                   <div className="form-select-wrapper">
                     <input
-                      type="text"
+                      type="month"
                       className="form-input"
-                      placeholder="e.g. July 2026"
-                      value={genMonth}
-                      onChange={(e) => setGenMonth(e.target.value)}
+                      value={selectedMonth}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setSelectedMonth(val);
+                        if (val) {
+                          const [year, month] = val.split("-");
+                          const date = new Date(parseInt(year), parseInt(month) - 1, 1);
+                          const formatted = date.toLocaleDateString("en-US", {
+                            month: "long",
+                            year: "numeric",
+                          });
+                          setGenMonth(formatted);
+                        }
+                      }}
                       required
                     />
                   </div>
@@ -651,6 +707,7 @@ export default function BillingPage() {
                 ) : (
                   tenantBills
                     .filter((b) => b.status === "Paid")
+                    .slice((tenantPage - 1) * ITEMS_PER_PAGE, tenantPage * ITEMS_PER_PAGE)
                     .map((b, i) => (
                       <tr key={b._id || b.id || i}>
                         <td>{b.month}</td>
@@ -670,6 +727,40 @@ export default function BillingPage() {
               </tbody>
             </table>
           </div>
+          
+          {/* Pagination */}
+          {tenantBills.filter((b) => b.status === "Paid").length > ITEMS_PER_PAGE && (
+            <div className="pagination-wrapper" style={{ padding: "16px 24px", borderTop: "1px solid #e2e8f0" }}>
+              <span className="pagination-text">
+                Page {tenantPage} of {Math.ceil(tenantBills.filter((b) => b.status === "Paid").length / ITEMS_PER_PAGE)}
+              </span>
+              <div className="pagination-controls">
+                <button
+                  className="pagination-btn"
+                  disabled={tenantPage <= 1}
+                  onClick={() => setTenantPage(p => p - 1)}
+                >
+                  Previous
+                </button>
+                {Array.from({ length: Math.ceil(tenantBills.filter((b) => b.status === "Paid").length / ITEMS_PER_PAGE) }).map((_, i) => (
+                  <button
+                    key={i}
+                    className={`pagination-btn ${tenantPage === i + 1 ? "active" : ""}`}
+                    onClick={() => setTenantPage(i + 1)}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+                <button
+                  className="pagination-btn"
+                  disabled={tenantPage >= Math.ceil(tenantBills.filter((b) => b.status === "Paid").length / ITEMS_PER_PAGE)}
+                  onClick={() => setTenantPage(p => p + 1)}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Payment Modal */}

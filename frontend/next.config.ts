@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
       {
         protocol: "http",
         hostname: "localhost",
-        port: "8090",     
+        port: "8090",
         pathname: "/uploads/**",
       },
     ],
@@ -18,13 +18,19 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/api/:path*",
-        destination: "http://localhost:8090/api/:path*",  // ← 8090
+        destination: "http://localhost:8090/api/:path*",
       },
       {
         source: "/uploads/:path*",
-        destination: "http://localhost:8090/uploads/:path*",  // ← 8090
+        destination: "http://localhost:8090/uploads/:path*",
       },
     ];
+  },
+  // Suppress ECONNRESET noise when backend is not yet running
+  logging: {
+    fetches: {
+      fullUrl: false,
+    },
   },
 };
 

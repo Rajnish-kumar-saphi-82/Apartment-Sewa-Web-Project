@@ -24,6 +24,11 @@ export default function MaintenancePage() {
   const [imagePreview, setImagePreview] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
+  // Pagination
+  const [ownerPage, setOwnerPage] = useState(1);
+  const [tenantPage, setTenantPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
+
   const loadData = async () => {
     try {
       const [ticketsRes, unitsRes] = await Promise.all([
@@ -164,7 +169,7 @@ export default function MaintenancePage() {
               No maintenance requests filed.
             </div>
           ) : (
-            displayedTickets.map((t, i) => (
+            displayedTickets.slice((ownerPage - 1) * ITEMS_PER_PAGE, ownerPage * ITEMS_PER_PAGE).map((t, i) => (
               <div key={t._id || t.id || i} className="maintenance-ticket-card">
                 <div className="ticket-header-img">
                   <img src={t.image} alt="leak" />
@@ -235,6 +240,40 @@ export default function MaintenancePage() {
             ))
           )}
         </div>
+        
+        {/* Pagination */}
+        {displayedTickets.length > ITEMS_PER_PAGE && (
+          <div className="pagination-wrapper" style={{ padding: "16px 24px", background: "#fff", borderRadius: "12px", border: "1px solid #e2e8f0", marginTop: "24px" }}>
+            <span className="pagination-text">
+              Page {ownerPage} of {Math.ceil(displayedTickets.length / ITEMS_PER_PAGE)}
+            </span>
+            <div className="pagination-controls">
+              <button
+                className="pagination-btn"
+                disabled={ownerPage <= 1}
+                onClick={() => setOwnerPage(p => p - 1)}
+              >
+                Previous
+              </button>
+              {Array.from({ length: Math.ceil(displayedTickets.length / ITEMS_PER_PAGE) }).map((_, i) => (
+                <button
+                  key={i}
+                  className={`pagination-btn ${ownerPage === i + 1 ? "active" : ""}`}
+                  onClick={() => setOwnerPage(i + 1)}
+                >
+                  {i + 1}
+                </button>
+              ))}
+              <button
+                className="pagination-btn"
+                disabled={ownerPage >= Math.ceil(displayedTickets.length / ITEMS_PER_PAGE)}
+                onClick={() => setOwnerPage(p => p + 1)}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -352,7 +391,7 @@ export default function MaintenancePage() {
                     </td>
                   </tr>
                 ) : (
-                  tenantTickets.map((t, i) => (
+                  tenantTickets.slice((tenantPage - 1) * ITEMS_PER_PAGE, tenantPage * ITEMS_PER_PAGE).map((t, i) => (
                     <tr key={t._id || t.id || i}>
                       <td><span style={{ fontWeight: 700 }}>#{(t._id || t.id || "000000").slice(-6).toUpperCase()}</span></td>
                       <td style={{ maxWidth: "200px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.description}</td>
@@ -372,6 +411,40 @@ export default function MaintenancePage() {
               </tbody>
             </table>
           </div>
+          
+          {/* Pagination */}
+          {tenantTickets.length > ITEMS_PER_PAGE && (
+            <div className="pagination-wrapper" style={{ padding: "16px 24px", borderTop: "1px solid #e2e8f0" }}>
+              <span className="pagination-text">
+                Page {tenantPage} of {Math.ceil(tenantTickets.length / ITEMS_PER_PAGE)}
+              </span>
+              <div className="pagination-controls">
+                <button
+                  className="pagination-btn"
+                  disabled={tenantPage <= 1}
+                  onClick={() => setTenantPage(p => p - 1)}
+                >
+                  Previous
+                </button>
+                {Array.from({ length: Math.ceil(tenantTickets.length / ITEMS_PER_PAGE) }).map((_, i) => (
+                  <button
+                    key={i}
+                    className={`pagination-btn ${tenantPage === i + 1 ? "active" : ""}`}
+                    onClick={() => setTenantPage(i + 1)}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+                <button
+                  className="pagination-btn"
+                  disabled={tenantPage >= Math.ceil(tenantTickets.length / ITEMS_PER_PAGE)}
+                  onClick={() => setTenantPage(p => p + 1)}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );

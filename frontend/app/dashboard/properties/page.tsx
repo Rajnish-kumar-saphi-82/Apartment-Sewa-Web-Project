@@ -23,6 +23,11 @@ export default function PropertiesPage() {
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
 
+  // Pagination
+  const [unitsPage, setUnitsPage] = useState(1);
+  const [usersPage, setUsersPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
+
   // Modals
   const [showAddUnitModal, setShowAddUnitModal] = useState(false);
   const [newUnitData, setNewUnitData] = useState({
@@ -158,7 +163,7 @@ export default function PropertiesPage() {
                     <td colSpan={5} style={{ textAlign: "center", padding: "24px", color: "#64748b" }}>No users found matching filters.</td>
                   </tr>
                 ) : (
-                  filteredUsers.map((u, i) => {
+                  filteredUsers.slice((usersPage - 1) * ITEMS_PER_PAGE, usersPage * ITEMS_PER_PAGE).map((u, i) => {
                     const userId = u._id || u.id || i.toString();
                     return (
                     <tr key={userId}>
@@ -199,6 +204,40 @@ export default function PropertiesPage() {
               </tbody>
             </table>
           </div>
+          
+          {/* Pagination */}
+          {filteredUsers.length > ITEMS_PER_PAGE && (
+            <div className="pagination-wrapper" style={{ padding: "16px 24px", borderTop: "1px solid #e2e8f0" }}>
+              <span className="pagination-text">
+                Page {usersPage} of {Math.ceil(filteredUsers.length / ITEMS_PER_PAGE)}
+              </span>
+              <div className="pagination-controls">
+                <button
+                  className="pagination-btn"
+                  disabled={usersPage <= 1}
+                  onClick={() => setUsersPage(p => p - 1)}
+                >
+                  Previous
+                </button>
+                {Array.from({ length: Math.ceil(filteredUsers.length / ITEMS_PER_PAGE) }).map((_, i) => (
+                  <button
+                    key={i}
+                    className={`pagination-btn ${usersPage === i + 1 ? "active" : ""}`}
+                    onClick={() => setUsersPage(i + 1)}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+                <button
+                  className="pagination-btn"
+                  disabled={usersPage >= Math.ceil(filteredUsers.length / ITEMS_PER_PAGE)}
+                  onClick={() => setUsersPage(p => p + 1)}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -227,9 +266,10 @@ export default function PropertiesPage() {
       setNewUnitData({ flatNo: "", floor: "", rent: "" });
       setUnitImage(null);
       loadUnits();
+      showAlert("Unit created successfully", "Success", "success");
     } catch (err) {
       console.error(err);
-      showAlert("Failed to add unit. Please try again.", "Error");
+      showAlert("Failed to add unit. Please try again.", "Error", "error");
     }
   };
 
@@ -325,7 +365,7 @@ export default function PropertiesPage() {
               No units registered. Add a unit using the button above.
             </div>
           ) : (
-            filteredUnits.map((u, i) => (
+            filteredUnits.slice((unitsPage - 1) * ITEMS_PER_PAGE, unitsPage * ITEMS_PER_PAGE).map((u, i) => (
               <div key={u._id || u.id || i} className="interactive-card">
                 <div className="card-image-wrapper">
                   <img src={u.image} className="card-image" alt="flat" />
@@ -340,7 +380,7 @@ export default function PropertiesPage() {
                     <span className="card-price">NPR {Number(u.rent).toLocaleString()} /mo</span>
                   </div>
                   {u.tenantName && (
-                    <div style={{ fontSize: "12px", background: "#f8fafc", padding: "8px", borderRadius: "6px", border: "1px solid #f1f5f9" }}>
+                    <div className="card-tenant-info">
                       Tenant: <b>{u.tenantName}</b>
                     </div>
                   )}
@@ -378,6 +418,40 @@ export default function PropertiesPage() {
             ))
           )}
         </div>
+
+        {/* Pagination */}
+        {filteredUnits.length > ITEMS_PER_PAGE && (
+          <div className="pagination-wrapper" style={{ padding: "16px 24px", background: "#fff", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+            <span className="pagination-text">
+              Page {unitsPage} of {Math.ceil(filteredUnits.length / ITEMS_PER_PAGE)}
+            </span>
+            <div className="pagination-controls">
+              <button
+                className="pagination-btn"
+                disabled={unitsPage <= 1}
+                onClick={() => setUnitsPage(p => p - 1)}
+              >
+                Previous
+              </button>
+              {Array.from({ length: Math.ceil(filteredUnits.length / ITEMS_PER_PAGE) }).map((_, i) => (
+                <button
+                  key={i}
+                  className={`pagination-btn ${unitsPage === i + 1 ? "active" : ""}`}
+                  onClick={() => setUnitsPage(i + 1)}
+                >
+                  {i + 1}
+                </button>
+              ))}
+              <button
+                className="pagination-btn"
+                disabled={unitsPage >= Math.ceil(filteredUnits.length / ITEMS_PER_PAGE)}
+                onClick={() => setUnitsPage(p => p + 1)}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Add Unit Modal */}
         {showAddUnitModal && (

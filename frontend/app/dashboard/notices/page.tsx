@@ -14,6 +14,10 @@ export default function NoticesPage() {
   const [message, setMessage] = useState("");
   const [publishing, setPublishing] = useState(false);
 
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
+
   const loadNotices = async () => {
     try {
       const res = await fetchNoticesApi();
@@ -119,7 +123,7 @@ export default function NoticesPage() {
           <div style={{ display: "none" }}></div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-            {notices.map((n, i) => (
+            {notices.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE).map((n, i) => (
               <div key={n._id || n.id || i} style={{ border: "1px solid #e2e8f0", borderRadius: "12px", padding: "18px 20px", background: "#ffffff", display: "flex", gap: "16px", alignItems: "flex-start", position: "relative" }}>
                 <div style={{ width: "40px", height: "40px", borderRadius: "10px", background: "#eff6ff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: "2px" }}>
                   <Megaphone size={18} style={{ color: "#1a56db" }} />
@@ -138,6 +142,40 @@ export default function NoticesPage() {
                 )}
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Pagination */}
+        {notices.length > ITEMS_PER_PAGE && (
+          <div className="pagination-wrapper" style={{ padding: "16px 24px", borderTop: "1px solid #e2e8f0" }}>
+            <span className="pagination-text">
+              Page {currentPage} of {Math.ceil(notices.length / ITEMS_PER_PAGE)}
+            </span>
+            <div className="pagination-controls">
+              <button
+                className="pagination-btn"
+                disabled={currentPage <= 1}
+                onClick={() => setCurrentPage(p => p - 1)}
+              >
+                Previous
+              </button>
+              {Array.from({ length: Math.ceil(notices.length / ITEMS_PER_PAGE) }).map((_, i) => (
+                <button
+                  key={i}
+                  className={`pagination-btn ${currentPage === i + 1 ? "active" : ""}`}
+                  onClick={() => setCurrentPage(i + 1)}
+                >
+                  {i + 1}
+                </button>
+              ))}
+              <button
+                className="pagination-btn"
+                disabled={currentPage >= Math.ceil(notices.length / ITEMS_PER_PAGE)}
+                onClick={() => setCurrentPage(p => p + 1)}
+              >
+                Next
+              </button>
+            </div>
           </div>
         )}
       </div>

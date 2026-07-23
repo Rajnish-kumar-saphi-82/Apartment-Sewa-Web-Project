@@ -23,8 +23,10 @@ export default function TenantsPage() {
   const [tenants, setTenants] = useState<any[]>([]);
   const [units, setUnits] = useState<any[]>([]);
 
-  // Search
+  // Search & Pagination
   const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
 
   // Modal
   const [showAddTenantModal, setShowAddTenantModal] = useState(false);
@@ -157,10 +159,10 @@ export default function TenantsPage() {
                     </td>
                   </tr>
                 ) : (
-                  filteredTenants.map((t, i) => (
+                  filteredTenants.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE).map((t, i) => (
                     <tr key={t._id || t.id || i}>
                       <td>
-                        <div style={{ fontWeight: 600, color: "#0f172a" }}>
+                        <div className="entity-name" style={{ fontWeight: 600 }}>
                           {t.name}
                         </div>
                       </td>
@@ -184,6 +186,40 @@ export default function TenantsPage() {
               </tbody>
             </table>
           </div>
+          
+          {/* Pagination */}
+          {filteredTenants.length > ITEMS_PER_PAGE && (
+            <div className="pagination-wrapper" style={{ padding: "16px 24px", borderTop: "1px solid #e2e8f0" }}>
+              <span className="pagination-text">
+                Page {currentPage} of {Math.ceil(filteredTenants.length / ITEMS_PER_PAGE)}
+              </span>
+              <div className="pagination-controls">
+                <button
+                  className="pagination-btn"
+                  disabled={currentPage <= 1}
+                  onClick={() => setCurrentPage(p => p - 1)}
+                >
+                  Previous
+                </button>
+                {Array.from({ length: Math.ceil(filteredTenants.length / ITEMS_PER_PAGE) }).map((_, i) => (
+                  <button
+                    key={i}
+                    className={`pagination-btn ${currentPage === i + 1 ? "active" : ""}`}
+                    onClick={() => setCurrentPage(i + 1)}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+                <button
+                  className="pagination-btn"
+                  disabled={currentPage >= Math.ceil(filteredTenants.length / ITEMS_PER_PAGE)}
+                  onClick={() => setCurrentPage(p => p + 1)}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Add Tenant Modal */}
@@ -355,10 +391,10 @@ export default function TenantsPage() {
                     </td>
                   </tr>
                 ) : (
-                  filteredTenants.map((t, i) => (
+                  filteredTenants.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE).map((t, i) => (
                     <tr key={t._id || t.id || i}>
                       <td>
-                        <div style={{ fontWeight: 600, color: "#0f172a" }}>
+                        <div className="entity-name" style={{ fontWeight: 600 }}>
                           {t.name}
                         </div>
                       </td>
@@ -376,6 +412,40 @@ export default function TenantsPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination */}
+          {filteredTenants.length > ITEMS_PER_PAGE && (
+            <div className="pagination-wrapper" style={{ padding: "16px 24px", borderTop: "1px solid #e2e8f0" }}>
+              <span className="pagination-text">
+                Page {currentPage} of {Math.ceil(filteredTenants.length / ITEMS_PER_PAGE)}
+              </span>
+              <div className="pagination-controls">
+                <button
+                  className="pagination-btn"
+                  disabled={currentPage <= 1}
+                  onClick={() => setCurrentPage(p => p - 1)}
+                >
+                  Previous
+                </button>
+                {Array.from({ length: Math.ceil(filteredTenants.length / ITEMS_PER_PAGE) }).map((_, i) => (
+                  <button
+                    key={i}
+                    className={`pagination-btn ${currentPage === i + 1 ? "active" : ""}`}
+                    onClick={() => setCurrentPage(i + 1)}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+                <button
+                  className="pagination-btn"
+                  disabled={currentPage >= Math.ceil(filteredTenants.length / ITEMS_PER_PAGE)}
+                  onClick={() => setCurrentPage(p => p + 1)}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
