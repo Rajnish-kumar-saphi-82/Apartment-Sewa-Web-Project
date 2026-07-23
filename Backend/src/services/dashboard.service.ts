@@ -1,9 +1,48 @@
 import { DashboardRepository } from "../repositories/dashboard.repository.js";
+import { UserModel } from "../models/auth.model.js";
 import { CreateNoticeDTO, CreateUnitDTO, UpdateUnitStatusDTO, CreateTenantDTO, CreateBillDTO, PayBillDTO, CreateTicketDTO, UpdateTicketStatusDTO } from "../dtos/dashboard.dto.js";
 
 const dashboardRepository = new DashboardRepository();
 
 export class DashboardService {
+  async getAnalytics() {
+    const [units, tenants, bills, tickets, notices] = await Promise.all([
+      dashboardRepository.getUnits(),
+      dashboardRepository.getTenants(),
+      dashboardRepository.getBills(),
+      dashboardRepository.getTickets(),
+      dashboardRepository.getNotices(),
+    ]);
+
+    const paidBills = bills.filter((bill) => bill.status === "Paid");
+    const pendingBills = bills.filter((bill) => bill.status === "Pending");
+    const occupiedUnits = units.filter((unit) => unit.status === "Occupied");
+    const vacantUnits = units.filter((unit) => unit.status === "Vacant");
+
+    return {
+      counts: {
+        units: units.length,
+        occupiedUnits: occupiedUnits.length,
+        vacantUnits: vacantUnits.length,
+        tenants: tenants.length,
+        bills: bills.length,
+        paidBills: paidBills.length,
+        pendingBills: pendingBills.length,
+        tickets: tickets.length,
+        notices: notices.length,
+      },
+      money: {
+        totalRevenue: paidBills.reduce((sum, bill) => sum + bill.totalCost, 0),
+        pendingAmount: pendingBills.reduce((sum, bill) => sum + bill.totalCost, 0),
+      },
+      recent: {
+        bills: bills.slice(0, 5),
+        tickets: tickets.slice(0, 5),
+        notices: notices.slice(0, 5),
+      },
+    };
+  }
+
   // Notices
   async createNotice(data: CreateNoticeDTO) {
     const date = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
@@ -14,6 +53,12 @@ export class DashboardService {
     return dashboardRepository.getNotices();
   }
 
+  async getNoticeById(id: string) {
+    const notice = await dashboardRepository.getNoticeById(id);
+    if (!notice) throw { status: 404, message: "Notice not found" };
+    return notice;
+  }
+
   async updateNotice(id: string, data: any) {
     const notice = await dashboardRepository.updateNotice(id, data);
     if (!notice) throw { status: 404, message: "Notice not found" };
@@ -22,7 +67,9 @@ export class DashboardService {
 
   // Units
   async createUnit(data: CreateUnitDTO) {
-    // Basic unique check could be added here if not handled by mongo
+    const existingUnit = await dashboardRepository.findUnitByFlatNo(data.flatNo);
+    if (existingUnit) throw { status: 400, message: `Unit ${data.flatNo} already exists` };
+
     const defaultImage = "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&auto=format&fit=crop&q=60";
     return dashboardRepository.createUnit({
       ...data,
@@ -35,7 +82,19 @@ export class DashboardService {
     return dashboardRepository.getUnits();
   }
 
+  async getUnitById(id: string) {
+    const unit = await dashboardRepository.getUnitById(id);
+    if (!unit) throw { status: 404, message: "Unit not found" };
+    return unit;
+  }
+
   async updateUnitStatus(id: string, data: UpdateUnitStatusDTO) {
+    const unit = await dashboardRepository.updateUnit(id, data);
+    if (!unit) throw { status: 404, message: "Unit not found" };
+    return unit;
+  }
+
+  async updateUnit(id: string, data: Partial<CreateUnitDTO>) {
     const unit = await dashboardRepository.updateUnit(id, data);
     if (!unit) throw { status: 404, message: "Unit not found" };
     return unit;
@@ -62,6 +121,12 @@ export class DashboardService {
 
   async getTenants() {
     return dashboardRepository.getTenants();
+  }
+
+  async getTenantById(id: string) {
+    const tenant = await dashboardRepository.getTenantById(id);
+    if (!tenant) throw { status: 404, message: "Tenant not found" };
+    return tenant;
   }
 
   // Bills
@@ -108,7 +173,13 @@ export class DashboardService {
     return bill;
   }
 
-  async payBill(id: string, data: PayBillDTO) {
+  async payBill(id: string, data: PayBillDTO, userId: string) {
+    const user = await UserModel.findById(userId).lean();
+    if (!user) throw { status: 404, message: "User not found" };
+    if (user.kyc_status !== "approved") {
+      throw { status: 403, message: "KYC verification must be approved before payment." };
+    }
+
     const paymentDate = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
     const bill = await dashboardRepository.updateBill(id, {
       status: "Paid",
@@ -122,17 +193,24 @@ export class DashboardService {
   // Tickets
   async createTicket(data: CreateTicketDTO) {
     const defaultImage = "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=600&auto=format&fit=crop&q=60";
+    const diagnostic = (data as any).diagnostic || "AI scanning pending. Processing components...";
     return dashboardRepository.createTicket({
       ...data,
       urgency: "new",
       status: "Pending",
-      diagnostic: "AI scanning pending. Processing components...",
+      diagnostic,
       image: data.image || defaultImage
     });
   }
 
   async getTickets() {
     return dashboardRepository.getTickets();
+  }
+
+  async getTicketById(id: string) {
+    const ticket = await dashboardRepository.getTicketById(id);
+    if (!ticket) throw { status: 404, message: "Ticket not found" };
+    return ticket;
   }
 
   async updateTicketStatus(id: string, data: UpdateTicketStatusDTO) {

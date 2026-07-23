@@ -29,6 +29,7 @@ import {
 import { useAuth } from "@/lib/context/AuthContext";
 import { useAlert } from "@/lib/context/AlertContext";
 import DashboardCharts from "./_components/DashboardCharts";
+import RequireKyc from "@/components/RequireKyc";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -349,14 +350,33 @@ export default function DashboardPage() {
       ? bills.find((b) => b.status === "Pending" && b.flatNo === tenantFlat)
       : undefined;
     const totalDue = unpaidBill ? unpaidBill.totalCost : 0;
+    const isKycApproved = user?.kyc_status === "approved";
+    const kycLabel =
+      user?.kyc_status === "pending"
+        ? "KYC Pending"
+        : user?.kyc_status === "rejected"
+          ? "KYC Rejected"
+          : isKycApproved
+            ? "Verified Tenant"
+            : "KYC Required";
+    const kycBadgeClass = isKycApproved ? "success" : user?.kyc_status === "pending" ? "pending" : "failed";
 
     const handlePayClick = (bill: any) => {
+      if (!isKycApproved) {
+        showAlert("Please complete and get KYC approved before making payment.", "KYC Required");
+        return;
+      }
       setSelectedBill(bill);
       setPayModal(true);
     };
 
     const handleConfirmPayment = async () => {
       if (!selectedBill) return;
+      if (!isKycApproved) {
+        showAlert("Please complete and get KYC approved before making payment.", "KYC Required");
+        setPayModal(false);
+        return;
+      }
       const billId = selectedBill._id || selectedBill.id;
       if (!billId || billId === "undefined") {
         showAlert("Could not find a valid bill ID. Please refresh and try again.", "Error");
@@ -456,14 +476,14 @@ export default function DashboardPage() {
           </div>
           <div className="page-actions">
             <span
-              className="status-badge success"
+              className={`status-badge ${kycBadgeClass}`}
               style={{
                 display: "inline-flex",
                 gap: "6px",
                 alignItems: "center",
               }}
             >
-              <Sparkles size={14} /> Verified Tenant
+              <Sparkles size={14} /> {kycLabel}
             </span>
           </div>
         </div>
@@ -574,18 +594,20 @@ export default function DashboardPage() {
                 </p>
               </div>
               {unpaidBill ? (
-                <button
-                  onClick={() => handlePayClick(unpaidBill)}
-                  className="btn-primary"
-                  style={{
-                    background: "#ffffff",
-                    color: "#1a56db",
-                    width: "auto",
-                    padding: "12px 24px",
-                  }}
-                >
-                  Pay Now
-                </button>
+                <RequireKyc fallback="alert">
+                  <button
+                    onClick={() => handlePayClick(unpaidBill)}
+                    className="btn-primary"
+                    style={{
+                      background: "#ffffff",
+                      color: "#1a56db",
+                      width: "auto",
+                      padding: "12px 24px",
+                    }}
+                  >
+                    Pay Now
+                  </button>
+                </RequireKyc>
               ) : (
                 <span
                   className="status-badge success"
@@ -612,7 +634,7 @@ export default function DashboardPage() {
               }}
             >
               <Link
-                href="/dashboard/billing"
+                href={isKycApproved ? "/dashboard/billing" : "/dashboard/kyc"}
                 className="sidebar-nav-item active"
                 style={{
                   display: "flex",
@@ -633,7 +655,7 @@ export default function DashboardPage() {
                   style={{ marginBottom: "6px", color: "#1a56db" }}
                 />
                 <span style={{ fontSize: "12px", fontWeight: 600 }}>
-                  Pay Rent
+                  {isKycApproved ? "Pay Rent" : "Verify KYC"}
                 </span>
               </Link>
               <Link

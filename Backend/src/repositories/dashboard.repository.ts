@@ -12,11 +12,14 @@ export class DashboardRepository {
   async getNotices(): Promise<INotice[]> {
     return NoticeModel.find().sort({ created_at: -1, _id: -1 });
   }
+  async getNoticeById(id: string): Promise<INotice | null> {
+    return NoticeModel.findById(id);
+  }
   async deleteNotice(id: string): Promise<INotice | null> {
     return NoticeModel.findByIdAndDelete(id);
   }
   async updateNotice(id: string, data: Partial<INotice>): Promise<INotice | null> {
-    return NoticeModel.findByIdAndUpdate(id, data, { new: true });
+    return NoticeModel.findByIdAndUpdate(id, data, { returnDocument: "after" });
   }
 
   // Units
@@ -26,8 +29,11 @@ export class DashboardRepository {
   async getUnits(): Promise<IUnit[]> {
     return UnitModel.find().sort({ created_at: -1 });
   }
+  async getUnitById(id: string): Promise<IUnit | null> {
+    return UnitModel.findById(id);
+  }
   async updateUnit(id: string, data: Partial<IUnit>): Promise<IUnit | null> {
-    return UnitModel.findByIdAndUpdate(id, data, { new: true });
+    return UnitModel.findByIdAndUpdate(id, data, { returnDocument: "after" });
   }
   async findUnitByFlatNo(flatNo: string): Promise<IUnit | null> {
     return UnitModel.findOne({ flatNo });
@@ -42,6 +48,9 @@ export class DashboardRepository {
   }
   async getTenants(): Promise<ITenant[]> {
     return TenantModel.find().sort({ created_at: -1 });
+  }
+  async getTenantById(id: string): Promise<ITenant | null> {
+    return TenantModel.findById(id);
   }
   async findTenantByFlatNo(flatNo: string): Promise<ITenant | null> {
     return TenantModel.findOne({ flatNo });
@@ -61,7 +70,7 @@ export class DashboardRepository {
     return BillModel.findById(id);
   }
   async updateBill(id: string, data: Partial<IBill>): Promise<IBill | null> {
-    return BillModel.findByIdAndUpdate(id, { $set: data }, { new: true, runValidators: false });
+    return BillModel.findByIdAndUpdate(id, { $set: data }, { returnDocument: "after", runValidators: false });
   }
   async getBillsByFlatNo(flatNo: string): Promise<IBill[]> {
     return BillModel.find({ flatNo }).sort({ created_at: -1 });
@@ -77,8 +86,11 @@ export class DashboardRepository {
   async getTickets(): Promise<ITicket[]> {
     return TicketModel.find().sort({ created_at: -1 });
   }
+  async getTicketById(id: string): Promise<ITicket | null> {
+    return TicketModel.findById(id);
+  }
   async updateTicket(id: string, data: Partial<ITicket>): Promise<ITicket | null> {
-    return TicketModel.findByIdAndUpdate(id, data, { new: true });
+    return TicketModel.findByIdAndUpdate(id, data, { returnDocument: "after" });
   }
   async deleteTicket(id: string): Promise<ITicket | null> {
     return TicketModel.findByIdAndDelete(id);

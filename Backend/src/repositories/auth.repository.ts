@@ -19,7 +19,7 @@ export class UserRepository {
   }
 
   async updateById(id: string, data: Partial<IUser>): Promise<IUser | null> {
-    return await UserModel.findByIdAndUpdate(id, data, { new: true });
+    return await UserModel.findByIdAndUpdate(id, data, { returnDocument: "after" });
   }
 
   async deleteById(id: string): Promise<IUser | null> {

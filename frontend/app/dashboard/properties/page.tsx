@@ -269,7 +269,8 @@ export default function PropertiesPage() {
       showAlert("Unit created successfully", "Success", "success");
     } catch (err) {
       console.error(err);
-      showAlert("Failed to add unit. Please try again.", "Error", "error");
+      const message = (err as any)?.response?.data?.message || "Failed to add unit. Please try again.";
+      showAlert(message, "Error", "error");
     }
   };
 

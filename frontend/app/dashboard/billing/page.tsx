@@ -139,6 +139,11 @@ export default function BillingPage() {
   // Handler to process simulated Khalti pay
   const handleKhaltiPay = async () => {
     if (!selectedBill) return;
+    if (user?.kyc_status !== "approved") {
+      showAlert("Please complete and get KYC approved before making payment.", "KYC Required");
+      setShowPayModal(false);
+      return;
+    }
     const billId = selectedBill._id || selectedBill.id;
     if (!billId || billId === "undefined") {
       showAlert("Could not find a valid bill ID. Please refresh the page and try again.", "Error");
@@ -792,7 +797,7 @@ export default function BillingPage() {
                 </div>
               </div>
               <button onClick={handleKhaltiPay} className="btn-khalti">
-                Simulate Khalti SDK Payment
+                {user?.kyc_status === "approved" ? "Simulate Khalti SDK Payment" : "Complete KYC First"}
               </button>
             </div>
           </div>

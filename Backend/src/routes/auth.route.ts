@@ -14,8 +14,18 @@ router.post("/register", (req, res) => authController.register(req, res));
 // POST /api/v1/auth/login - Login user
 router.post("/login", (req, res) => authController.login(req, res));
 
+// GET /api/v1/auth - Detail of logged-in user (protected)
+router.get("/", authorizedMiddleware, (req, res) =>
+  authController.getCurrentUser(req, res),
+);
+
 // GET /api/v1/auth/whoami - Detail of logged-in user (protected)
 router.get("/whoami", authorizedMiddleware, (req, res) =>
+  authController.getCurrentUser(req, res),
+);
+
+// GET /api/v1/auth/me - Mobile-compatible current-user alias
+router.get("/me", authorizedMiddleware, (req, res) =>
   authController.getCurrentUser(req, res),
 );
 
@@ -30,6 +40,19 @@ router.put(
 
 router.put("/change-password", authorizedMiddleware, (req, res) =>
   authController.changePassword(req, res),
+);
+
+// PUT /api/v1/auth/password/update - Mobile-compatible password alias
+router.put("/password/update", authorizedMiddleware, (req, res) =>
+  authController.changePassword(req, res),
+);
+
+// POST /api/v1/auth/upload-image - Mobile-compatible image upload alias
+router.post(
+  "/upload-image",
+  authorizedMiddleware,
+  uploadProfileImage.single("profileImage"),
+  (req, res) => authController.updateProfile(req, res),
 );
 
 // GET /api/v1/auth/verify-email - Verify user email
