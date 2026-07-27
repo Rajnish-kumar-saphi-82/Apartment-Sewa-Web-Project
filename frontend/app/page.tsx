@@ -126,7 +126,7 @@ export default function HomePage() {
       <section id="features" className="landing-features-sec">
         <span className="section-tag">Same backend, same workflow</span>
         <h2 className="section-title">
-          A web dashboard that matches the mobile app features
+          A web dashboard features
         </h2>
         <p className="section-desc">
           The web pages use the same account, billing, tenant, notice, and
