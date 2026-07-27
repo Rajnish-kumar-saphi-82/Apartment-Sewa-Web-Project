@@ -6,6 +6,8 @@
     "dev": "next dev --port 3000",
     "build": "next build",
     "start": "next start",
+    "test": "node --test tests/unit/*.test.mjs tests/integration/*.test.mjs",
+    "test:coverage": "node scripts/frontend-coverage.mjs",
     "lint": "eslint"
   },
   "dependencies": {
