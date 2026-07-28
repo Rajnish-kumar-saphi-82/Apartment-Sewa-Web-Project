@@ -1,19 +1,25 @@
 import axios from "axios";
 import fs from "fs";
 
-const API_KEY = process.env.API_KEY || "";
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
+
+if (!GROQ_API_KEY) {
+  throw new Error("GROQ_API_KEY is not configured.");
+}
+const MODEL = "llama-3.2-11b-vision-preview"; 
 
 const aiApiClient = axios.create({
-    baseURL: "https://generativelanguage.googleapis.com",
+    baseURL: "https://api.groq.com/openai/v1",
     headers: {
         "Content-Type": "application/json",
+        "Authorization": `Bearer ${GROQ_API_KEY}`
     },
 });
 
 export const analyzeMaintenanceImage = async (imagePath: string): Promise<string> => {
     try {
-        if (!API_KEY) {
-            console.error("[AI Diagnostic] No API_KEY found in environment variables!");
+        if (!GROQ_API_KEY) {
+            console.error("[AI Diagnostic] No GROQ_API_KEY configured!");
             return "AI scanning failed. No API key configured.";
         }
 
@@ -23,7 +29,6 @@ export const analyzeMaintenanceImage = async (imagePath: string): Promise<string
         }
 
         console.log("[AI Diagnostic] Analyzing image at path:", imagePath);
-        console.log("[AI Diagnostic] Using API key starting with:", API_KEY.substring(0, 10) + "...");
 
         const base64Image = fs.readFileSync(imagePath, { encoding: 'base64' });
         const mimeType = imagePath.endsWith('.png') ? 'image/png' 
@@ -32,62 +37,34 @@ export const analyzeMaintenanceImage = async (imagePath: string): Promise<string
 
         console.log("[AI Diagnostic] Image encoded, MIME type:", mimeType, "Base64 length:", base64Image.length);
 
-        // Try with x-goog-api-key header first (standard API key format)
-        let response;
+        let response: any = null;
+
         try {
+            console.log("[AI Diagnostic] Using Groq Vision model...");
             response = await aiApiClient.post(
-                `/v1beta/models/gemini-flash-latest:generateContent?key=${API_KEY}`,
+                `/chat/completions`,
                 {
-                    contents: [
+                    model: MODEL,
+                    messages: [
                         {
-                            parts: [
-                                { text: "Analyze this image and identify the maintenance issue in 1-2 short sentences. Be concise." },
-                                {
-                                    inline_data: {
-                                        mime_type: mimeType,
-                                        data: base64Image
-                                    }
-                                }
+                            role: "user",
+                            content: [
+                                { type: "text", text: "Analyze this image and identify the maintenance issue in 1-2 short sentences. Be concise." },
+                                { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64Image}` } }
                             ]
                         }
                     ]
                 }
             );
-        } catch (firstError: any) {
-            console.error("[AI Diagnostic] First attempt failed:", firstError?.response?.data || firstError?.message);
             
-            // Try with Bearer auth as fallback
-            console.log("[AI Diagnostic] Retrying with Bearer auth...");
-            response = await aiApiClient.post(
-                `/v1beta/models/gemini-flash-latest:generateContent`,
-                {
-                    contents: [
-                        {
-                            parts: [
-                                { text: "Analyze this image and identify the maintenance issue in 1-2 short sentences. Be concise." },
-                                {
-                                    inline_data: {
-                                        mime_type: mimeType,
-                                        data: base64Image
-                                    }
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    headers: {
-                        "Authorization": `Bearer ${API_KEY}`,
-                        "Content-Type": "application/json"
-                    }
-                }
-            );
+        } catch (error: any) {
+             throw error; 
         }
 
-        console.log("[AI Diagnostic] Got response from Gemini API");
+        console.log("[AI Diagnostic] Got response from Groq API");
 
-        if (response.data?.candidates?.[0]?.content?.parts?.[0]?.text) {
-            const result = response.data.candidates[0].content.parts[0].text;
+        if (response.data?.choices?.[0]?.message?.content) {
+            const result = response.data.choices[0].message.content;
             console.log("[AI Diagnostic] Result:", result);
             return result;
         }

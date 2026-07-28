@@ -14,10 +14,11 @@ import {
   Droplets,
   ShieldCheck,
 } from "lucide-react";
-import { getBills as fetchBillsApi, createBill as addBillApi, payBill as payBillApi, getUnits as fetchUnitsApi, getMyBills as fetchMyBillsApi } from "@/lib/api/dashboard";
+import { getBills as fetchBillsApi, createBill as addBillApi, payBill as payBillApi, getUnits as fetchUnitsApi, getMyBills as fetchMyBillsApi, initiateKhaltiPayment } from "@/lib/api/dashboard";
 import { useAuth } from "@/lib/context/AuthContext";
 import { useAlert } from "@/lib/context/AlertContext";
 import RequireKyc from "@/components/RequireKyc";
+
 
 export default function BillingPage() {
   const { user } = useAuth();
@@ -136,7 +137,7 @@ export default function BillingPage() {
     }
   };
 
-  // Handler to process simulated Khalti pay
+  // Handler to process real Khalti pay
   const handleKhaltiPay = async () => {
     if (!selectedBill) return;
     const billId = selectedBill._id || selectedBill.id;
@@ -145,21 +146,15 @@ export default function BillingPage() {
       return;
     }
     try {
-      await payBillApi(billId, "Khalti");
-
-      // Refresh
-      await loadData();
-      setShowPayModal(false);
-      setSelectedBill(null);
-      showAlert(
-        "Thank you! Payment of NPR " +
-          selectedBill.totalCost.toLocaleString() +
-          " processed successfully via Khalti Wallet!",
-        "Payment Success"
-      );
-    } catch (error) {
+      const res = await initiateKhaltiPayment(billId);
+      if (res.data && res.data.data && res.data.data.payment_url) {
+        window.location.href = res.data.data.payment_url;
+      } else {
+        throw new Error("Invalid response from payment gateway.");
+      }
+    } catch (error: any) {
       console.error("Failed to process payment", error);
-      showAlert("Payment processing failed.", "Error");
+      showAlert(error.response?.data?.message || error.message || "Payment processing failed.", "Error");
     }
   };
 
@@ -792,7 +787,7 @@ export default function BillingPage() {
                 </div>
               </div>
               <button onClick={handleKhaltiPay} className="btn-khalti">
-                Simulate Khalti SDK Payment
+                Pay with Khalti
               </button>
             </div>
           </div>

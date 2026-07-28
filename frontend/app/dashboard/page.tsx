@@ -24,8 +24,10 @@ import {
   getBills as fetchBillsApi, 
   getTickets as fetchTicketsApi, 
   getNotices as fetchNoticesApi, 
-  payBill as payBillApi 
+  payBill as payBillApi,
+  initiateKhaltiPayment
 } from "@/lib/api/dashboard";
+
 import { useAuth } from "@/lib/context/AuthContext";
 import { useAlert } from "@/lib/context/AlertContext";
 import DashboardCharts from "./_components/DashboardCharts";
@@ -363,13 +365,15 @@ export default function DashboardPage() {
         return;
       }
       try {
-        await payBillApi(billId, "Khalti");
-        await loadData();
-        setPayModal(false);
-        showAlert("Payment Successful via Khalti SDK!", "Success");
-      } catch (error) {
+        const res = await initiateKhaltiPayment(billId);
+        if (res.data && res.data.data && res.data.data.payment_url) {
+          window.location.href = res.data.data.payment_url;
+        } else {
+          throw new Error("Invalid response from payment gateway.");
+        }
+      } catch (error: any) {
         console.error("Payment failed", error);
-        showAlert("Payment Failed.", "Error");
+        showAlert(error.response?.data?.message || error.message || "Payment initiation failed.", "Error");
       }
     };
 

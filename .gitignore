@@ -21,10 +21,12 @@ Backend/uploads/
 # Backend
 Backend/coverage/
 
-Backend/test-gemini.ts
+# Backend/test-gemini.ts
 
 # Frontend
 
 frontend/scripts/
 frontend/test-api.js
 frontend/test-image.js
+Backend/test-gemini.ts
+Backend/test-keys.cjs
