@@ -8,6 +8,8 @@ import adminUserRoutes from "./routes/admin-user.route.js";
 import dashboardRoutes from "./routes/dashboard.route.js";
 import kycEmergencyRoutes from "./routes/kyc-emergency.route.js";
 import uploadRoutes from "./routes/upload.route.js";
+import paymentRoutes from "./routes/payment.route.js";
+import chatRoutes from "./routes/chat.route.js";
 import { connectToMongoDB } from "./database/mongodb.js";
 import { ApiResponseHelper } from "./utils/apihelper.util.js";
 import passport from "./configs/passport.js";
@@ -45,6 +47,8 @@ app.use("/api/v1/admin/users", adminUserRoutes);
 app.use("/api/v1/dashboard", dashboardRoutes);
 app.use("/api/v1", kycEmergencyRoutes);
 app.use("/api/upload", uploadRoutes);
+app.use("/api/v1/payment", paymentRoutes);
+app.use("/api/v1/chat", chatRoutes);
 app.use("/api", dashboardRoutes);
 
 app.get("/", (req: Request, res: Response) => {
