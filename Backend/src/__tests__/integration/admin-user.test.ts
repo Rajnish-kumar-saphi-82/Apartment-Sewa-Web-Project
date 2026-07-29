@@ -2,6 +2,7 @@ import request from "supertest";
 import app from "../../app";
 import { UserModel } from "../../models/auth.model";
 import { PasswordUtil } from "../../utils/hash.util";
+import { UserRole } from "../../types/auth.type";
 
 describe("Integration: Admin User Routes", () => {
   let adminToken: string;
@@ -20,7 +21,7 @@ describe("Integration: Admin User Routes", () => {
       password: adminPassword,
       phone: "9800000001",
       country_code: "+977",
-      role: "Admin",
+      role: UserRole.ADMIN,
       is_verified: true,
     });
 
@@ -31,7 +32,7 @@ describe("Integration: Admin User Routes", () => {
       password: await PasswordUtil.hash("TenantPass123"),
       phone: "9800000002",
       country_code: "+977",
-      role: "Tenant",
+      role: UserRole.TENANT,
       is_verified: true,
     });
 
@@ -42,7 +43,7 @@ describe("Integration: Admin User Routes", () => {
       password: await PasswordUtil.hash("TargetPass123"),
       phone: "9800000003",
       country_code: "+977",
-      role: "Tenant",
+      role: UserRole.TENANT,
       is_verified: true,
     });
     targetUserId = targetUser._id.toString();

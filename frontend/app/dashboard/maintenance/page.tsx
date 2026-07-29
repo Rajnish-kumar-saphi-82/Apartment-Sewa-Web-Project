@@ -100,7 +100,7 @@ export default function MaintenancePage() {
             if (res.success && res.data) {
               setDescription(res.data);
             } else {
-              console.warn("Failed to analyze image description.");
+              console.warn("Failed to analyze image description.", res.message || res);
             }
           }
           setIsAnalyzing(false);

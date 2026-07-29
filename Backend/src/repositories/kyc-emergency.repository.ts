@@ -26,7 +26,7 @@ export class KycRepository {
     return KycModel.findByIdAndUpdate(
       id,
       { status, reviewNote, reviewedAt: new Date() },
-      { new: true }
+      { returnDocument: "after" }
     );
   }
 
@@ -49,7 +49,7 @@ export class EmergencyRepository {
   }
 
   async update(id: string, data: Partial<IEmergencyContact>): Promise<IEmergencyContact | null> {
-    return EmergencyContactModel.findByIdAndUpdate(id, data, { new: true });
+    return EmergencyContactModel.findByIdAndUpdate(id, data, { returnDocument: "after" });
   }
 
   async deleteById(id: string): Promise<IEmergencyContact | null> {

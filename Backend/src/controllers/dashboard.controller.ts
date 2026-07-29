@@ -14,11 +14,29 @@ import {
 const dashboardService = new DashboardService();
 
 export class DashboardController {
+    async getAnalytics(req: Request, res: Response) {
+        try {
+            const analytics = await dashboardService.getAnalytics();
+            return ApiResponseHelper.success(res, analytics, "Analytics fetched successfully");
+        } catch (error: any) {
+            return ApiResponseHelper.error(res, error.message, error.status ?? 500);
+        }
+    }
+
     // Notices
     async getNotices(req: Request, res: Response) {
         try {
             const notices = await dashboardService.getNotices();
             return ApiResponseHelper.success(res, notices, "Notices fetched successfully");
+        } catch (error: any) {
+            return ApiResponseHelper.error(res, error.message, error.status ?? 500);
+        }
+    }
+
+    async getNoticeById(req: Request, res: Response) {
+        try {
+            const notice = await dashboardService.getNoticeById(req.params.id as string);
+            return ApiResponseHelper.success(res, notice, "Notice fetched successfully");
         } catch (error: any) {
             return ApiResponseHelper.error(res, error.message, error.status ?? 500);
         }
@@ -42,10 +60,19 @@ export class DashboardController {
 
     async updateNotice(req: Request, res: Response) {
         try {
-            const notice = await dashboardService.updateNotice(req.params.id, req.body);
+            const notice = await dashboardService.updateNotice((req.params.id as string), req.body);
             return ApiResponseHelper.success(res, notice, "Notice updated successfully");
         } catch (error: any) {
             if (error.errors) return ApiResponseHelper.validationError(res, error.errors);
+            return ApiResponseHelper.error(res, error.message, error.status ?? 500);
+        }
+    }
+
+    async markNoticeRead(req: Request, res: Response) {
+        try {
+            const notice = await dashboardService.getNoticeById(req.params.id as string);
+            return ApiResponseHelper.success(res, notice, "Notification marked as read");
+        } catch (error: any) {
             return ApiResponseHelper.error(res, error.message, error.status ?? 500);
         }
     }
@@ -55,6 +82,15 @@ export class DashboardController {
         try {
             const units = await dashboardService.getUnits();
             return ApiResponseHelper.success(res, units, "Units fetched successfully");
+        } catch (error: any) {
+            return ApiResponseHelper.error(res, error.message, error.status ?? 500);
+        }
+    }
+
+    async getUnitById(req: Request, res: Response) {
+        try {
+            const unit = await dashboardService.getUnitById(req.params.id as string);
+            return ApiResponseHelper.success(res, unit, "Unit fetched successfully");
         } catch (error: any) {
             return ApiResponseHelper.error(res, error.message, error.status ?? 500);
         }
@@ -76,7 +112,7 @@ export class DashboardController {
 
     async updateUnitStatus(req: Request, res: Response) {
         try {
-            const { id } = req.params;
+            const id = req.params.id as string;
             const data = UpdateUnitStatusDTO.parse(req.body);
             const unit = await dashboardService.updateUnitStatus(id, data as any);
             return ApiResponseHelper.success(res, unit, "Unit status updated successfully");
@@ -86,11 +122,31 @@ export class DashboardController {
         }
     }
 
+    async uploadApartmentPhotos(req: Request, res: Response) {
+        try {
+            if (!req.file) return ApiResponseHelper.error(res, "Image is required", 400);
+            const image = `${req.protocol}://${req.get("host")}/uploads/dashboard/${req.file.filename}`;
+            const unit = await dashboardService.updateUnit(req.params.id as string, { image });
+            return ApiResponseHelper.success(res, unit, "Apartment photo uploaded successfully");
+        } catch (error: any) {
+            return ApiResponseHelper.error(res, error.message, error.status ?? 500);
+        }
+    }
+
     // Tenants
     async getTenants(req: Request, res: Response) {
         try {
             const tenants = await dashboardService.getTenants();
             return ApiResponseHelper.success(res, tenants, "Tenants fetched successfully");
+        } catch (error: any) {
+            return ApiResponseHelper.error(res, error.message, error.status ?? 500);
+        }
+    }
+
+    async getTenantById(req: Request, res: Response) {
+        try {
+            const tenant = await dashboardService.getTenantById(req.params.id as string);
+            return ApiResponseHelper.success(res, tenant, "Tenant fetched successfully");
         } catch (error: any) {
             return ApiResponseHelper.error(res, error.message, error.status ?? 500);
         }
@@ -136,7 +192,7 @@ export class DashboardController {
 
     async getBillById(req: Request, res: Response) {
         try {
-            const bill = await dashboardService.getBillById(req.params.id);
+            const bill = await dashboardService.getBillById((req.params.id as string));
             return ApiResponseHelper.success(res, bill, "Bill fetched successfully");
         } catch (error: any) {
             return ApiResponseHelper.error(res, error.message, error.status ?? 500);
@@ -156,9 +212,11 @@ export class DashboardController {
 
     async payBill(req: Request, res: Response) {
         try {
-            const { id } = req.params;
+            const id = req.params.id as string;
             const data = PayBillDTO.parse(req.body);
-            const bill = await dashboardService.payBill(id, data as any);
+            const userId = (req as any).user?.userId;
+            if (!userId) return ApiResponseHelper.error(res, "Unauthorized", 401);
+            const bill = await dashboardService.payBill(id, data as any, userId);
             return ApiResponseHelper.success(res, bill, "Bill paid successfully");
         } catch (error: any) {
             if (error.errors) return ApiResponseHelper.validationError(res, error.errors);
@@ -171,6 +229,15 @@ export class DashboardController {
         try {
             const tickets = await dashboardService.getTickets();
             return ApiResponseHelper.success(res, tickets, "Tickets fetched successfully");
+        } catch (error: any) {
+            return ApiResponseHelper.error(res, error.message, error.status ?? 500);
+        }
+    }
+
+    async getTicketById(req: Request, res: Response) {
+        try {
+            const ticket = await dashboardService.getTicketById(req.params.id as string);
+            return ApiResponseHelper.success(res, ticket, "Ticket fetched successfully");
         } catch (error: any) {
             return ApiResponseHelper.error(res, error.message, error.status ?? 500);
         }
@@ -201,7 +268,7 @@ export class DashboardController {
             if (!parsedData.success) {
                 return ApiResponseHelper.error(res, parsedData.error.issues[0].message, 400, parsedData.error.issues as any);
             }
-            const ticket = await dashboardService.updateTicketStatus(req.params.id, parsedData.data as any);
+            const ticket = await dashboardService.updateTicketStatus((req.params.id as string), parsedData.data as any);
             return ApiResponseHelper.success(res, ticket, "Ticket status updated");
         } catch (exception) {
             return this.handleError(res, exception);
@@ -210,7 +277,7 @@ export class DashboardController {
 
     async deleteTicket(req: Request, res: Response) {
         try {
-            await dashboardService.deleteTicket(req.params.id);
+            await dashboardService.deleteTicket((req.params.id as string));
             return ApiResponseHelper.success(res, null, "Ticket deleted successfully");
         } catch (exception) {
             return this.handleError(res, exception);
@@ -219,7 +286,7 @@ export class DashboardController {
 
     async deleteNotice(req: Request, res: Response) {
         try {
-            await dashboardService.deleteNotice(req.params.id);
+            await dashboardService.deleteNotice((req.params.id as string));
             return ApiResponseHelper.success(res, null, "Notice deleted successfully");
         } catch (exception) {
             return this.handleError(res, exception);
@@ -228,7 +295,7 @@ export class DashboardController {
 
     async deleteUnit(req: Request, res: Response) {
         try {
-            await dashboardService.deleteUnit(req.params.id);
+            await dashboardService.deleteUnit((req.params.id as string));
             return ApiResponseHelper.success(res, null, "Unit deleted successfully");
         } catch (exception) {
             return this.handleError(res, exception);

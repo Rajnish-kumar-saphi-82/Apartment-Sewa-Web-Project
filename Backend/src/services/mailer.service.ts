@@ -48,6 +48,9 @@ class MailerService {
 
   async sendVerificationEmail(to: string, verificationToken: string, name: string) {
     if (!this.transporter) {
+      if (process.env.NODE_ENV === "test") {
+        return;
+      }
       console.warn("[Mailer] Transporter not initialized, skipping email sending.");
       return;
     }

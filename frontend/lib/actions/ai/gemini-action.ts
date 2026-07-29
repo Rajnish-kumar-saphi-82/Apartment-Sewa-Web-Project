@@ -60,7 +60,8 @@ export async function handleAnalyzeImage(base64Image: string, mimeType: string):
                 message: "Failed to analyze image",
             }
         }
-    } catch (error) {
+    } catch (error: any) {
+        console.error("[Gemini Action Error]:", error?.response?.data || error.message || error);
         return {
             success: false,
             error: true,

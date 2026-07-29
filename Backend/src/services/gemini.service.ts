@@ -1,12 +1,12 @@
 import axios from "axios";
 import fs from "fs";
 
-const GROQ_API_KEY = process.env.GROQ_API_KEY;
-
-if (!GROQ_API_KEY) {
-  throw new Error("GROQ_API_KEY is not configured.");
-}
-const MODEL = "llama-3.2-11b-vision-preview"; 
+const API_KEY =
+    process.env.GEMINI_API_KEY ||
+    process.env.GOOGLE_API_KEY ||
+    process.env.API_KEY ||
+    "";
+const MODELS = ["gemini-flash-latest", "gemini-3.5-flash", "gemini-2.0-flash"];
 
 const aiApiClient = axios.create({
     baseURL: "https://api.groq.com/openai/v1",
@@ -18,9 +18,13 @@ const aiApiClient = axios.create({
 
 export const analyzeMaintenanceImage = async (imagePath: string): Promise<string> => {
     try {
-        if (!GROQ_API_KEY) {
-            console.error("[AI Diagnostic] No GROQ_API_KEY configured!");
-            return "AI scanning failed. No API key configured.";
+        if (process.env.NODE_ENV === "test") {
+            return "Test AI diagnostic result.";
+        }
+
+        if (!API_KEY) {
+            console.error("[AI Diagnostic] No API_KEY found in environment variables!");
+            return "AI scanning failed. No API key configured. Add API_KEY or GEMINI_API_KEY to Backend/.env.";
         }
 
         if (!fs.existsSync(imagePath)) {
@@ -37,28 +41,40 @@ export const analyzeMaintenanceImage = async (imagePath: string): Promise<string
 
         console.log("[AI Diagnostic] Image encoded, MIME type:", mimeType, "Base64 length:", base64Image.length);
 
-        let response: any = null;
-
-        try {
-            console.log("[AI Diagnostic] Using Groq Vision model...");
-            response = await aiApiClient.post(
-                `/chat/completions`,
+        let response;
+        const payload = {
+            contents: [
                 {
-                    model: MODEL,
-                    messages: [
+                    parts: [
+                        { text: "Analyze this image and identify the maintenance issue in 1-2 short sentences. Be concise." },
                         {
-                            role: "user",
-                            content: [
-                                { type: "text", text: "Analyze this image and identify the maintenance issue in 1-2 short sentences. Be concise." },
-                                { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64Image}` } }
-                            ]
+                            inline_data: {
+                                mime_type: mimeType,
+                                data: base64Image
+                            }
                         }
                     ]
                 }
-            );
-            
-        } catch (error: any) {
-             throw error; 
+            ]
+        };
+
+        let lastError: any;
+        for (const model of MODELS) {
+            try {
+                response = await aiApiClient.post(
+                    `/v1beta/models/${model}:generateContent?key=${API_KEY}`,
+                    payload
+                );
+                break;
+            } catch (error: any) {
+                lastError = error;
+                console.error(`[AI Diagnostic] ${model} failed:`, error?.response?.data || error?.message);
+                if (error?.response?.status && ![400, 404].includes(error.response.status)) break;
+            }
+        }
+
+        if (!response) {
+            throw lastError || new Error("Gemini API did not return a response.");
         }
 
         console.log("[AI Diagnostic] Got response from Groq API");

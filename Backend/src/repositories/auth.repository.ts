@@ -26,7 +26,7 @@ export class UserRepository {
     return await UserModel.findByIdAndDelete(id);
   }
 
-  async findByQuery(query: Record<string, unknown>): Promise<IUser | null> {
+  async findByQuery(query: Record<string, any>): Promise<IUser | null> {
     return await UserModel.findOne(query);
   }
 

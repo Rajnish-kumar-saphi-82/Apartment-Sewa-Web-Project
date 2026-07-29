@@ -11,7 +11,12 @@ const emergencyController = new EmergencyController();
 // KYC Routes 
 // All KYC routes require login
 router.get("/kyc/mine", authorizedMiddleware, (req: Request, res: Response) => kycController.getMyKyc(req, res));
-router.post("/kyc", authorizedMiddleware, uploadDashboardImage.single("document"), (req: Request, res: Response) => kycController.submitKyc(req, res));
+router.post("/kyc", authorizedMiddleware, uploadDashboardImage.fields([
+  { name: "documentFront", maxCount: 1 },
+  { name: "documentBack", maxCount: 1 },
+  { name: "selfie", maxCount: 1 },
+  { name: "ownershipCert", maxCount: 1 },
+]), (req: Request, res: Response) => kycController.submitKyc(req, res));
 router.get("/kyc", authorizedMiddleware, roleMiddleware(UserRole.ADMIN, UserRole.OWNER), (req: Request, res: Response) => kycController.getAllKyc(req, res));
 router.patch("/kyc/:id/review", authorizedMiddleware, roleMiddleware(UserRole.ADMIN, UserRole.OWNER), (req: Request, res: Response) => kycController.reviewKyc(req, res));
 router.delete("/kyc/:id", authorizedMiddleware, roleMiddleware(UserRole.ADMIN, UserRole.OWNER), (req: Request, res: Response) => kycController.deleteKyc(req, res));

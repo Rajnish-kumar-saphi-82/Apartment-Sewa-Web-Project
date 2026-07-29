@@ -52,6 +52,7 @@ export const uploadProfileImage = multer({
   limits: { fileSize: MAX_FILE_SIZE },
 });
 
+
 const dashboardStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, dashboardUploadDir);
