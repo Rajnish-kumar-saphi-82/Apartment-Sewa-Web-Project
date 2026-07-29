@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, ChangeEvent, FormEvent, KeyboardEvent } from "react";
 import { MessageSquare, X } from "lucide-react";
-import { handleGenerateContent } from "@/lib/actions/ai/gemini-action";
+import { sendChatMessage } from "@/lib/api/dashboard";
 import Image from "next/image";
 
 type ChatMessage = {
@@ -60,23 +60,37 @@ export default function FloatingChatWidget() {
     ]);
 
     try {
-      const result = await handleGenerateContent(trimmedPrompt);
-      const resultData = formatMessage(result.data?.candidates?.[0]?.content?.parts?.[0]?.text);
+      const historyToSend = chatHistory.slice(1); // skip starter message
+      const result = await sendChatMessage(trimmedPrompt, historyToSend);
+      
+      const candidateText = result.data?.data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      const resultData = formatMessage(candidateText);
+
       setChatHistory((prev) => [
         ...prev,
         {
           id: Date.now() + 1,
           role: "assistant",
-          content: result.success ? resultData : result.message || "Something went wrong.",
+          content: resultData || "Something went wrong.",
         },
       ]);
-    } catch (error) {
+    } catch (error: any) {
+      let friendlyMessage = "Sorry, I couldn't connect to the server. Please try again.";
+      
+      if (error?.response?.status === 401 || error?.response?.status === 403) {
+        friendlyMessage = "⚠️ Please log in first to use the AI assistant.";
+      } else if (error?.response?.data?.message) {
+        friendlyMessage = error.response.data.message;
+      } else if (error?.message && !error.message.toLowerCase().includes("network")) {
+        friendlyMessage = error.message;
+      }
+      
       setChatHistory((prev) => [
         ...prev,
         {
           id: Date.now() + 1,
           role: "assistant",
-          content: error instanceof Error ? error.message : "An unknown error occurred.",
+          content: friendlyMessage,
         },
       ]);
     } finally {

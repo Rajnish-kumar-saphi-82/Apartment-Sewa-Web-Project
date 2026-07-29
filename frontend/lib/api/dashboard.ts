@@ -24,6 +24,10 @@ export const getBills = () => axiosInstance.get(API.DASHBOARD.BILLS);
 export const getMyBills = () => axiosInstance.get(`${API.DASHBOARD.BILLS}/mine`);
 export const createBill = (data: any) => axiosInstance.post(API.DASHBOARD.BILLS, data);
 export const payBill = (id: string, paymentMethod: string) => axiosInstance.patch(`${API.DASHBOARD.BILLS}/${id}/pay`, { paymentMethod });
+export const initiateKhaltiPayment = (billId: string) => axiosInstance.post("/api/v1/payment/khalti/initiate", { billId });
+export const verifyKhaltiPayment = (pidx: string) => axiosInstance.post("/api/v1/payment/khalti/verify", { pidx });
+export const sendChatMessage = (message: string, history: any[]) => axiosInstance.post("/api/v1/chat", { message, history });
+
 
 // Tickets 
 export const getTickets = () => axiosInstance.get(API.DASHBOARD.TICKETS);

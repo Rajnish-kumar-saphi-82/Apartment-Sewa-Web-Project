@@ -12,6 +12,8 @@ export interface IBill extends Document {
   status: "Paid" | "Pending";
   paymentDate?: string;
   paymentMethod?: string;
+  khaltiPidx?: string;
+  khaltiTransactionId?: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -29,6 +31,8 @@ const BillSchema = new Schema<IBill>(
     status: { type: String, enum: ["Paid", "Pending"], default: "Pending" },
     paymentDate: { type: String },
     paymentMethod: { type: String },
+    khaltiPidx: { type: String },
+    khaltiTransactionId: { type: String },
   },
   {
     timestamps: { createdAt: "created_at", updatedAt: "updated_at" },

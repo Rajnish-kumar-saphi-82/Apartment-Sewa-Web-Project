@@ -9,9 +9,10 @@ const API_KEY =
 const MODELS = ["gemini-flash-latest", "gemini-3.5-flash", "gemini-2.0-flash"];
 
 const aiApiClient = axios.create({
-    baseURL: "https://generativelanguage.googleapis.com",
+    baseURL: "https://api.groq.com/openai/v1",
     headers: {
         "Content-Type": "application/json",
+        "Authorization": `Bearer ${GROQ_API_KEY}`
     },
 });
 
@@ -32,7 +33,6 @@ export const analyzeMaintenanceImage = async (imagePath: string): Promise<string
         }
 
         console.log("[AI Diagnostic] Analyzing image at path:", imagePath);
-        console.log("[AI Diagnostic] Using API key starting with:", API_KEY.substring(0, 10) + "...");
 
         const base64Image = fs.readFileSync(imagePath, { encoding: 'base64' });
         const mimeType = imagePath.endsWith('.png') ? 'image/png' 
@@ -77,10 +77,10 @@ export const analyzeMaintenanceImage = async (imagePath: string): Promise<string
             throw lastError || new Error("Gemini API did not return a response.");
         }
 
-        console.log("[AI Diagnostic] Got response from Gemini API");
+        console.log("[AI Diagnostic] Got response from Groq API");
 
-        if (response.data?.candidates?.[0]?.content?.parts?.[0]?.text) {
-            const result = response.data.candidates[0].content.parts[0].text;
+        if (response.data?.choices?.[0]?.message?.content) {
+            const result = response.data.choices[0].message.content;
             console.log("[AI Diagnostic] Result:", result);
             return result;
         }
